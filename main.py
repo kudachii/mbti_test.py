@@ -1,14 +1,13 @@
 import streamlit as st
 
 def run_mbti_diagnostic():
-    # タイトルを小さく、1行に収まるようにHTMLで指定
+    # タイトル
     st.markdown('<h3 style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">🧠 性格タイプ診断 (MBTIプロトタイプ)</h3>', unsafe_allow_html=True)
-    st.caption("20個の質問に答えて、あなたの性格タイプを判定します。")
+    st.caption("20個の質問に答えて、あなたの性格タイプと相性の良いメンターを判定します。")
 
-    # 4つの指標のスコア
     scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0}
 
-    # 質問データ定義
+    # 質問データ
     questions = [
         ("多人数で集まるイベントに参加すると元気が出る", "E-I", 1),
         ("自分の考えを整理するときは、誰かに話すより一人で考えたい", "E-I", -1),
@@ -32,52 +31,60 @@ def run_mbti_diagnostic():
         ("予期せぬトラブルにも臨機応変に対応することを楽しめる", "J-P", -1),
     ]
 
-    # 回答フォーム
     with st.form("mbti_form"):
         for i, (q_text, axis, weight) in enumerate(questions):
             st.markdown(f"**Q{i+1}. {q_text}**")
-            ans = st.radio(
-                f"q_{i}",
-                options=[1, 2, 3, 4, 5],
-                format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
-                label_visibility="collapsed",
-                horizontal=True,
-                index=2
-            )
+            ans = st.radio(f"q_{i}", options=[1, 2, 3, 4, 5], 
+                           format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
+                           label_visibility="collapsed", horizontal=True, index=2)
             scores[axis] += (ans - 3) * weight
-
         submit = st.form_submit_button("診断結果を出す ✨")
 
     if submit:
-        # 判定ロジック
-        mbti_type = ""
-        mbti_type += "E" if scores["E-I"] > 0 else "I"
-        mbti_type += "S" if scores["S-N"] > 0 else "N"
-        mbti_type += "T" if scores["T-F"] > 0 else "F"
-        mbti_type += "J" if scores["J-P"] > 0 else "P"
+        # タイプ判定
+        res = ("E" if scores["E-I"] > 0 else "I") + \
+              ("S" if scores["S-N"] > 0 else "N") + \
+              ("T" if scores["T-F"] > 0 else "F") + \
+              ("J" if scores["J-P"] > 0 else "P")
 
-        # メンターとの紐付け設定
-        mentor_mapping = {
-            "T": "論理的なビジネスコーチ / カサネ・イズミ",
-            "F": "優しさに溢れるメンター / 頼れるお姉さん",
-            "TJ": "論理的なビジネスコーチ",
-            "TP": "カサネ・イズミ",
-            "FJ": "頼れるお姉さん",
-            "FP": "優しさに溢れるメンター",
-            "E": "ツンデレな指導員 (喝を入れてほしい場合)"
+        # 16タイプ解説データ
+        mbti_details = {
+            "ISTJ": {"name": "管理者", "desc": "真面目で実用的。秩序とルールを重んじる誠実な人です。", "mentor": "論理的なビジネスコーチ"},
+            "ISFJ": {"name": "擁護者", "desc": "献身的で温かい。周囲の人を静かに支える守護者です。", "mentor": "優しさに溢れるメンター"},
+            "INFJ": {"name": "提唱者", "desc": "理想主義で洞察力が鋭い。静かながら強い信念を持っています。", "mentor": "頼れるお姉さん"},
+            "INTJ": {"name": "建築家", "desc": "戦略的で完璧主義。常に知識と論理で最適解を求めます。", "mentor": "カサネ・イズミ"},
+            "ISTP": {"name": "巨匠", "desc": "冷静で器用。観察力が鋭く、トラブル解決が得意です。", "mentor": "ツンデレな指導員"},
+            "ISFP": {"name": "冒険家", "desc": "感性豊かで自由を愛する。自分らしく生きるアーティストです。", "mentor": "優しさに溢れるメンター"},
+            "INFP": {"name": "仲介者", "desc": "繊細で理想家。自分の価値観を大切にする心優しい人です。", "mentor": "頼れるお姉さん"},
+            "INTP": {"name": "論理学者", "desc": "独創的な理論家。知的好奇心が強く、分析が大好きです。", "mentor": "カサネ・イズミ"},
+            "ESTP": {"name": "起業家", "desc": "行動的でエネルギッシュ。スリルと変化を好む挑戦者です。", "mentor": "ツンデレな指導員"},
+            "ESFP": {"name": "エンターテイナー", "desc": "明るく友好的。周囲を楽しませるムードメーカーです。", "mentor": "優しさに溢れるメンター"},
+            "ENFP": {"name": "広報運動家", "desc": "情熱的で自由奔放。可能性を見つける天才です。", "mentor": "頼れるお姉さん"},
+            "ENTP": {"name": "討論者", "desc": "知的で好奇心旺盛。新しいアイデアで常識を疑う発明家です。", "mentor": "ツンデレな指導員"},
+            "ESTJ": {"name": "幹部", "desc": "組織的で現実的。物事を効率よく進めるリーダーです。", "mentor": "論理的なビジネスコーチ"},
+            "ESFJ": {"name": "領事", "desc": "社交的で世話好き。調和を大切にする、皆のまとめ役です。", "mentor": "優しさに溢れるメンター"},
+            "ENFJ": {"name": "主人公", "desc": "カリスマ性があり共感的。人々を導き、励ますリーダーです。", "mentor": "頼れるお姉さん"},
+            "ENTJ": {"name": "指揮官", "desc": "大胆で意志が強い。目標達成のために道を切り拓く戦略家です。", "mentor": "論理的なビジネスコーチ"}
         }
 
-        # 結果表示
+        detail = mbti_details.get(res, {"name": "不明", "desc": "-", "mentor": "優しさに溢れるメンター"})
+
         st.divider()
         st.balloons()
-        st.subheader(f"あなたのタイプは: {mbti_type}")
+        st.subheader(f"判定結果：{res}（{detail['name']}）")
+        st.write(f"💡 **あなたの特徴**: {detail['desc']}")
         
-        # 思考(T)か感情(F)かに基づいておすすめを表示
-        key = mbti_type[2] # T or F
-        recommended = mentor_mapping.get(key, "優しさに溢れるメンター")
+        st.success(f"📌 **おすすめメンター**: {detail['mentor']}")
         
-        st.success(f"📌 あなたにピッタリのメンター: **{recommended}**")
-        st.info("この結果を参考に、メインの日記アプリでメンターを切り替えてみてください。")
+        # メンターからの特別コメント（一言解説）
+        comment = {
+            "カサネ・イズミ": "「あなたのデータは極めて特異だ。その思考を最適化すれば、さらなる高みへ到達できる。」",
+            "論理的なビジネスコーチ": "「あなたの能力を最大限に活かすための戦略を練ろう。まずは現状の分析からだ。」",
+            "頼れるお姉さん": "「一生懸命なところ、素敵よ。でもたまには肩の力を抜いて、私に甘えていいのよ？」",
+            "優しさに溢れるメンター": "「あなたは今のままで十分素晴らしいですよ。一緒に、一歩ずつ進んでいきましょうね。」",
+            "ツンデレな指導員": "「ふん、あんたみたいなタイプは私が付いてないと危なっかしいわね。しっかりしなさいよ！」"
+        }
+        st.info(comment.get(detail['mentor'], ""))
 
 if __name__ == "__main__":
     run_mbti_diagnostic()
