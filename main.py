@@ -1,11 +1,12 @@
 import streamlit as st
 
 def run_mbti_diagnostic():
-    st.title("🧠 性格タイプ診断 (MBTIプロトタイプ)")
-    st.write("20個の質問に答えて、あなたの性格タイプを判定します。")
+    # タイトルを小さく、1行に収まるようにHTMLで指定
+    # フォントサイズ20px、太字、下の余白を5pxに設定
+    st.markdown('<h3 style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">🧠 性格タイプ診断 (MBTIプロトタイプ)</h3>', unsafe_allow_html=True)
+    st.caption("20個の質問に答えて、あなたの性格タイプを判定します。")
 
     # 4つの指標のスコア
-    # E(外向)/I(内向), S(感覚)/N(直観), T(思考)/F(感情), J(判断)/P(知覚)
     scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0}
 
     # 質問データ定義
@@ -34,7 +35,6 @@ def run_mbti_diagnostic():
 
     # 回答フォーム
     with st.form("mbti_form"):
-        results = []
         for i, (q_text, axis, weight) in enumerate(questions):
             st.markdown(f"**Q{i+1}. {q_text}**")
             ans = st.radio(
@@ -45,7 +45,7 @@ def run_mbti_diagnostic():
                 horizontal=True,
                 index=2
             )
-            # スコア計算: (回答 - 中立) * 重み
+            # スコア計算: (回答値 - 中立3) * 重み
             scores[axis] += (ans - 3) * weight
 
         submit = st.form_submit_button("診断結果を出す ✨")
@@ -60,17 +60,7 @@ def run_mbti_diagnostic():
 
         st.divider()
         st.balloons()
-        st.header(f"あなたのタイプは: **{mbti_type}** です")
-        
-        # メンターのレコメンド（例）
-        recommendations = {
-            "I": "論理的なビジネスコーチ や カサネ・イズミ",
-            "E": "頼れるお姉さん や 優しさに溢れるメンター",
-            "T": "論理的なビジネスコーチ",
-            "F": "優しさに溢れるメンター",
-        }
-        
-        st.success(f"あなたにおすすめの属性: **{recommendations.get(mbti_type[0])}**")
+        st.header(f"あなたのタイプは: **{mbti_type}**")
         st.info("この結果を参考に、メイン画面でメンターを選択してみてください。")
 
 if __name__ == "__main__":
