@@ -2,7 +2,6 @@ import streamlit as st
 
 def run_mbti_diagnostic():
     # タイトルを小さく、1行に収まるようにHTMLで指定
-    # フォントサイズ20px、太字、下の余白を5pxに設定
     st.markdown('<h3 style="font-size: 20px; font-weight: bold; margin-bottom: 5px;">🧠 性格タイプ診断 (MBTIプロトタイプ)</h3>', unsafe_allow_html=True)
     st.caption("20個の質問に答えて、あなたの性格タイプを判定します。")
 
@@ -45,23 +44,40 @@ def run_mbti_diagnostic():
                 horizontal=True,
                 index=2
             )
-            # スコア計算: (回答値 - 中立3) * 重み
             scores[axis] += (ans - 3) * weight
 
         submit = st.form_submit_button("診断結果を出す ✨")
 
     if submit:
-        # 判定
+        # 判定ロジック
         mbti_type = ""
         mbti_type += "E" if scores["E-I"] > 0 else "I"
         mbti_type += "S" if scores["S-N"] > 0 else "N"
         mbti_type += "T" if scores["T-F"] > 0 else "F"
         mbti_type += "J" if scores["J-P"] > 0 else "P"
 
+        # メンターとの紐付け設定
+        mentor_mapping = {
+            "T": "論理的なビジネスコーチ / カサネ・イズミ",
+            "F": "優しさに溢れるメンター / 頼れるお姉さん",
+            "TJ": "論理的なビジネスコーチ",
+            "TP": "カサネ・イズミ",
+            "FJ": "頼れるお姉さん",
+            "FP": "優しさに溢れるメンター",
+            "E": "ツンデレな指導員 (喝を入れてほしい場合)"
+        }
+
+        # 結果表示
         st.divider()
         st.balloons()
-        st.header(f"あなたのタイプは: **{mbti_type}**")
-        st.info("この結果を参考に、メイン画面でメンターを選択してみてください。")
+        st.subheader(f"あなたのタイプは: {mbti_type}")
+        
+        # 思考(T)か感情(F)かに基づいておすすめを表示
+        key = mbti_type[2] # T or F
+        recommended = mentor_mapping.get(key, "優しさに溢れるメンター")
+        
+        st.success(f"📌 あなたにピッタリのメンター: **{recommended}**")
+        st.info("この結果を参考に、メインの日記アプリでメンターを切り替えてみてください。")
 
 if __name__ == "__main__":
     run_mbti_diagnostic()
