@@ -1,16 +1,15 @@
 import streamlit as st
-import plotly.graph_objects as go # ←追加！グラフを描くためのライブラリ
+import plotly.graph_objects as go
 
 def run_mbti_diagnostic():
+    # ページ設定
+    st.set_page_config(page_title="MBTI性格診断 Pro", page_icon="🧠")
+
     # タイトル
-    st.markdown('<h3 style="font-size: 24px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (レーダーチャート対応版)</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="font-size: 24px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (フル機能版)</h3>', unsafe_allow_html=True)
     st.caption("24個の質問に答えて、あなたの詳細な性格タイプと相性の良いメンターを判定します。")
 
-    # スコアの初期化
-    if 'scores' not in st.session_state:
-        st.session_state.scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0, "A-T": 0}
-
-    # 質問データ（合計24問）
+    # 質問データ
     questions = [
         ("多人数で集まるイベントに参加すると元気が出る", "E-I", 1),
         ("自分の考えを整理するときは、誰かに話すより一人で考えたい", "E-I", -1),
@@ -32,7 +31,6 @@ def run_mbti_diagnostic():
         ("マニュアルがある場合、それを忠実に守る方だ", "S-N", 1),
         ("人から「共感力が高い」と言われるより「頭が良い」と言われたい", "T-F", 1),
         ("予期せぬトラブルにも臨機応変に対応することを楽しめる", "J-P", -1),
-        # Identity (A-T) 軸
         ("ストレスを感じる状況でも、比較的冷静でいられる", "A-T", 1),
         ("過去の失敗をいつまでも悔やんでしまうことがある", "A-T", -1),
         ("自分の能力や決断に自信を持っている", "A-T", 1),
@@ -41,9 +39,11 @@ def run_mbti_diagnostic():
 
     # 回答用フォーム
     with st.form("mbti_form"):
+        # 進捗バーの初期表示
+        my_bar = st.progress(0, text="回答を始めてください ✨")
+        
         user_answers = {}
         for i, (q_text, axis, weight) in enumerate(questions):
-            # 少しデザインを調整（質問番号を見やすく）
             st.markdown(f"<p style='margin-bottom: 0px; font-weight:bold;'>Q{i+1}. {q_text}</p>", unsafe_allow_html=True)
             user_answers[i] = st.radio(
                 f"q_{i}", 
@@ -53,27 +53,28 @@ def run_mbti_diagnostic():
                 horizontal=True, 
                 index=2
             )
-            st.write("---") # 区切り線を追加
+            st.write("---")
         
         submit = st.form_submit_button("診断結果を詳しく見る ✨", use_container_width=True)
 
     if submit:
+        # 進捗バーを100%にする演出
+        my_bar.progress(100, text="全問回答完了！解析中...")
+
         # スコア計算
         current_scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0, "A-T": 0}
         for i, (q_text, axis, weight) in enumerate(questions):
             current_scores[axis] += (user_answers[i] - 3) * weight
 
-        # 4文字タイプ判定
+        # タイプ判定
         mbti_core = ("E" if current_scores["E-I"] >= 0 else "I") + \
                     ("S" if current_scores["S-N"] >= 0 else "N") + \
                     ("T" if current_scores["T-F"] >= 0 else "F") + \
                     ("J" if current_scores["J-P"] >= 0 else "P")
-        
-        # A-T判定
         identity = "-A" if current_scores["A-T"] >= 0 else "-T"
         full_res = mbti_core + identity
 
-        # 16タイプ詳細データ
+        # データ定義
         mbti_details = {
             "ISTJ": {"name": "管理者", "desc": "真面目で実用的。秩序とルールを重んじる誠実な人です。", "mentor": "論理的なビジネスコーチ"},
             "ISFJ": {"name": "擁護者", "desc": "献身的で温かい。周囲の人を静かに支える守護者です。", "mentor": "優しさに溢れるメンター (Default)"},
@@ -92,7 +93,6 @@ def run_mbti_diagnostic():
             "ENFJ": {"name": "主人公", "desc": "カリスマ性があり共感的。人々を導き、励ますリーダーです。", "mentor": "頼れるお姉さん"},
             "ENTJ": {"name": "指揮官", "desc": "大胆で意志が強い。目標達成のために道を切り拓く戦略家です。", "mentor": "論理的なビジネスコーチ"}
         }
-
         mentor_quotes = {
             "カサネ・イズミ：論理と不確定要素": "「あなたのデータは極めて特異だ。その思考を最適化すれば、さらなる高みへ到達できる。」",
             "論理的なビジネスコーチ": "「あなたの能力を最大限に活かすための戦略を練ろう。まずは現状の分析からだ。」",
@@ -104,74 +104,30 @@ def run_mbti_diagnostic():
 
         detail = mbti_details.get(mbti_core)
 
-        # --- 結果表示エリア ---
+        # 結果表示
         st.divider()
         st.balloons()
-        
         st.markdown(f"## 判定結果：{full_res}")
         st.markdown(f"#### **{detail['name']}**")
-        
-        # --- ▼ ここからレーダーチャート追加ブロック ▼ ---
-        
-        # グラフ用のデータを準備
+
+        # レーダーチャート
         categories = ['外向(E)', '感覚(S)', '思考(T)', '判断(J)', '自己主張(A)']
-        # スコアをリスト化し、最後の点を最初と同じにして閉じた形にする
         values = [current_scores["E-I"], current_scores["S-N"], current_scores["T-F"], current_scores["J-P"], current_scores["A-T"]]
-        values_for_plot = values + [values[0]]
-        categories_for_plot = categories + [categories[0]]
-
-        # Plotlyでレーダーチャートを作成
         fig = go.Figure(data=go.Scatterpolar(
-              r=values_for_plot,
-              theta=categories_for_plot,
+              r=values + [values[0]],
+              theta=categories + [categories[0]],
               fill='toself',
-              name='あなたのスコア',
-              line_color='#4A90E2', # 線の色
-              fillcolor='rgba(74, 144, 226, 0.3)' # 塗りつぶしの色（半透明）
+              line_color='#4A90E2'
         ))
-
-        # グラフのレイアウト設定
-        fig.update_layout(
-          polar=dict(
-            radialaxis=dict(
-              visible=True,
-              range=[-12, 12], # 軸の範囲（少し余裕を持たせる）
-              tickfont=dict(size=10),
-              gridcolor='lightgrey' # グリッド線の色
-            ),
-            angularaxis=dict(
-                tickfont=dict(size=14, weight='bold') # 各軸のラベル文字サイズ
-            )
-          ),
-          showlegend=False,
-          title=dict(text="📊 あなたの性格バランスチャート", x=0.5), # タイトルを中央寄せ
-          margin=dict(t=80, b=30, l=30, r=30) # 余白調整
-        )
-
-        # Streamlitでグラフを表示
+        fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[-12, 12])), showlegend=False, title="📊 性格バランスチャート")
         st.plotly_chart(fig, use_container_width=True)
-        
-        # グラフの見方を説明
-        st.caption("""
-        **【グラフの見方】**
-        中心が「0点（中立）」です。
-        青いエリアが**外側（プラス方向）**に伸びているほど、ラベルの性質（E, S, T, J, A）が強く、
-        **中心より内側（マイナス方向）**に凹んでいるほど、対になる性質（I, N, F, P, T）が強いことを示します。
-        """)
-        st.divider()
-        # --- ▲ ここまでレーダーチャート追加ブロック ▲ ---
 
-        # 性格の特徴を表示
+        # 詳細説明
         st.info(f"💡 **あなたの特徴 ({identity})**\n\n{detail['desc']}\n\n" + 
-                ("あなたは自分に自信を持ち、周囲の影響を受けにくい安定したタイプです。" if identity == "-A" 
-                 else "あなたは感受性が豊かで、自分を振り返り成長し続ける完璧主義なタイプです。"))
+                ("あなたは自信に満ち、ストレス下でも安定を保てるタイプです。" if identity == "-A" else "あなたは向上心が強く、自分を磨き続ける繊細な努力家です。"))
         
-        # おすすめメンターを表示
         st.success(f"📌 **おすすめメンター：{detail['mentor']}**")
-        
-        # メンターからのひと言
-        st.markdown(f"💬 **メンターからのメッセージ**")
-        st.warning(f"*{mentor_quotes.get(detail['mentor'])}*")
+        st.warning(f"💬 **メンターからのメッセージ**\n\n*{mentor_quotes.get(detail['mentor'])}*")
 
 if __name__ == "__main__":
     run_mbti_diagnostic()
