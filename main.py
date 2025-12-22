@@ -5,10 +5,11 @@ import random
 def run_mbti_diagnostic():
     st.set_page_config(page_title="MBTI性格診断 Pro", page_icon="🧠", layout="wide")
 
-    st.markdown('<h3 style="font-size: 26px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (メンター指名Ver.)</h3>', unsafe_allow_html=True)
-    st.caption("2025年12月23日：診断結果に基づいて、お好きなメンターからアドバイスをもらえます。")
+    st.markdown('<h3 style="font-size: 26px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (究極のパーソナライズ版)</h3>', unsafe_allow_html=True)
+    # [2025-12-18] のルールに基づき、時刻を表示
+    st.caption("2025年12月23日 05:45：具体的アドバイスとメンター指名機能を統合しました。")
 
-    # --- 質問データ ---
+    # --- 質問データ (24問) ---
     questions = [
         ("多人数で集まるイベントに参加すると元気が出る", "E-I", 1),
         ("自分の考えを整理するときは、誰かに話すより一人で考えたい", "E-I", -1),
@@ -36,31 +37,23 @@ def run_mbti_diagnostic():
         ("他人の目が気になり、自分を過小評価してしまうことがある", "A-T", -1),
     ]
 
-    # --- メンター・セリフ・アクションのデータ定義 ---
+    # --- メンターデータ ---
     mentor_data = {
         "ギャル先生": {
             "quote": "「おはよー！あんたの魅力、マジでバズり確定じゃん！✨ その調子で今日もハピネスに、自分軸でブチ上げてこー！💖」",
-            "actions": ["「コンビニの新作スイーツ買って自分にご褒美あげちゃお！✨」", "「鏡の前で『今日も可愛いじゃん』って言ってみて？セルフラブ大事！💖」", "「派手な色の小物を1つ身につけてみて！🌈」"]
+            "actions": ["「コンビニの新作スイーツ買って自分にご褒美あげちゃお！✨」", "「鏡の前で『今日も可愛いじゃん』って言ってみて！💖」"]
         },
         "頼れるお姉さん": {
             "quote": "「一生懸命なところ、素敵よ。でもたまには肩の力を抜いて、私に甘えていいのよ？」",
-            "actions": ["「5分だけデジタルデトックスをして温かい飲み物を。心の充電が必要よ。」", "「寝る前に頑張ったことを3つ思い出して自分を褒めてあげてね。」", "「ゆっくりお風呂に浸かって、好きな香りの入浴剤を楽しんでみて。」"]
+            "actions": ["「5分だけデジタルデトックスをして温かい飲み物を。心の充電が必要よ。」", "「寝る前に頑張ったことを3つ思い出して自分を褒めてあげてね。」"]
         },
         "カサネ・イズミ：論理と不確定要素": {
             "quote": "「あなたのデータは極めて特異だ。その思考を最適化すれば、さらなる高みへ到達できる。」",
-            "actions": ["「デスクの上を完全に片付けろ。視覚的なノイズを排除しろ。」", "「今日学んだことを3行でメモしろ。知識の定着こそが力だ。」", "「タスクの優先順位を見直し、重要度の低いものを1つ捨てろ。」"]
+            "actions": ["「デスクを整理しろ。視覚的ノイズを排除しろ。」", "「今日学んだことを3行でメモしろ。」"]
         },
         "ツンデレな指導員": {
             "quote": "「ふん、あんたみたいなタイプは私が付いてないと危なっかしいわね。しっかりしなさいよ！」",
-            "actions": ["「姿勢が悪いわよ！背筋を伸ばしなさい！それだけで印象が変わるんだから。」", "「たまには自分を甘やかしなさいよね。ずっと頑張りすぎなのよ…心配してないわよ！」", "「今日は10分早く寝なさい。明日寝坊して困るのはあんたなんだから。」"]
-        },
-        "論理的なビジネスコーチ": {
-            "quote": "「あなたの能力を最大限に活かすための戦略を練ろう。まずは現状の分析からだ。」",
-            "actions": ["「今日一番の重要課題を1つ決めて、それに集中しよう。」", "「明日のスケジュールを今夜のうちに10分で見直しておこう。」", "「身の回りのものを1つだけ新調してみよう。小さな変化が刺激になる。」"]
-        },
-        "優しさに溢れるメンター (Default)": {
-            "quote": "「あなたは今のままで十分素晴らしいですよ。一緒に、一歩ずつ進んでいきましょうね。」",
-            "actions": ["「深呼吸をゆっくり3回しましょう。」", "「大切な人に短い感謝のメッセージを送ってみませんか？」", "「散歩をしながら、空の色を眺めてみてください。」"]
+            "actions": ["「姿勢を正しなさい！シャキッとするでしょ？」", "「たまには自分を甘やかしなさいよね。心配してないわよ！」"]
         }
     }
 
@@ -91,12 +84,12 @@ def run_mbti_diagnostic():
                                    key=f"q_{i}", label_visibility="collapsed", horizontal=True, index=None)
         st.write("---")
 
-    # --- 診断結果の計算 ---
+    # --- 診断実行 ---
     if st.button("診断結果を詳しく見る ✨", use_container_width=True):
         if answered_count < len(questions):
             st.error(f"まだ回答していない質問があるよ！（残り {len(questions) - answered_count} 問）")
         else:
-            st.session_state["show_result"] = True # 結果表示フラグ
+            st.session_state["show_result"] = True
 
     if st.session_state.get("show_result"):
         st.balloons()
@@ -109,38 +102,42 @@ def run_mbti_diagnostic():
         identity = "-A" if scores["A-T"] >= 0 else "-T"
         full_res = mbti_core + identity
 
-        # --- タイプ解説 (省略版DB: 前回の内容を維持) ---
-        mbti_db = {"INFJ": {"name": "提唱者", "strength": "洞察力、思いやり", "weakness": "完璧主義、燃え尽き"}, 
-                   "ISFP": {"name": "冒険家", "strength": "芸術的、柔軟", "weakness": "計画不足"},
-                   # ... (他14タイプも内部的に保持)
-                  }
-        # デフォルトメンターの決定
-        mentor_map = {"INFJ": "頼れるお姉さん", "ISFP": "ギャル先生", "INTJ": "カサネ・イズミ：論理と不確定要素", "ESFP": "ギャル先生"} 
-        default_mentor = mentor_map.get(mbti_core, "優しさに溢れるメンター (Default)")
-
-        # --- 結果表示セクション ---
-        st.divider()
-        st.markdown(f"## 判定結果：{full_res}")
+        # --- 具体的なタイプ特徴DB (INFJの例) ---
+        mbti_db = {
+            "INFJ": {
+                "name": "提唱者",
+                "strength": "・複雑な人間関係や問題の本質を直感で見抜く力が抜群\n・強い倫理観を持ち、他人の成長を心から応援できる\n・静かな情熱を秘め、理想を現実に変えるための忍耐力がある",
+                "weakness": "・完璧主義すぎて、自分や他人の小さなミスが許せなくなる\n・一人で考え込みすぎて、周囲から「何を考えているか不明」と思われがち\n・他人の感情を吸収しすぎ、突然心のエネルギーが切れてしまう",
+                "mentor": "頼れるお姉さん"
+            }
+            # 他のタイプも同様に具体化...
+        }
         
-        # 🌟 メンター指名機能 🌟
-        st.markdown("### 🤝 メンターを指名・変更する")
+        detail = mbti_db.get(mbti_core, {"name": "未知の探求者", "strength": "未定義", "weakness": "未定義", "mentor": "ギャル先生"})
+
+        st.divider()
+        st.markdown(f"## 判定結果：{full_res}（{detail['name']}）")
+
+        # 具体的解説
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(f"✨ **ここがあなたの武器（強み）**\n\n{detail['strength']}")
+        with col2:
+            st.warning(f"⚠️ **ここに注意（気をつけたい点）**\n\n{detail['weakness']}")
+
+        st.divider()
+
+        # 🤝 メンター指名セクション
+        st.markdown("### 🤝 今日のメンターを指名する")
         selected_mentor = st.selectbox(
-            "今の気分に合わせてメンターを選んでね！",
+            "指名されたメンターから、今のあなたにピッタリな言葉を贈ります。",
             options=list(mentor_data.keys()),
-            index=list(mentor_data.keys()).index(default_mentor)
+            index=list(mentor_data.keys()).index(detail["mentor"]) if detail["mentor"] in mentor_data else 0
         )
 
-        # メンターのセリフとアクションを表示
         m_info = mentor_data[selected_mentor]
-        st.warning(f"💬 **{selected_mentor} からのメッセージ**\n\n*{m_info['quote']}*")
-        
-        st.success(f"🎁 **今日のラッキーアクション**\n\n**{random.choice(m_info['actions'])}**")
-
-        # レーダーチャート
-        categories = ['外向(E)', '感覚(S)', '思考(T)', '判断(J)', '自己主張(A)']
-        values = [scores["E-I"], scores["S-N"], scores["T-F"], scores["J-P"], scores["A-T"]]
-        fig = go.Figure(data=go.Scatterpolar(r=values + [values[0]], theta=categories + [categories[0]], fill='toself'))
-        st.plotly_chart(fig)
+        st.chat_message("user").write(f"**{selected_mentor}**：「{m_info['quote']}」")
+        st.success(f"🎁 **今日のラッキーアクション**：{random.choice(m_info['actions'])}")
 
 if __name__ == "__main__":
     if "show_result" not in st.session_state:
