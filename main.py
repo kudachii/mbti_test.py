@@ -5,8 +5,8 @@ import random
 def run_mbti_diagnostic():
     st.set_page_config(page_title="MBTI性格診断 Pro", page_icon="🧠", layout="wide")
 
-    st.markdown('<h3 style="font-size: 26px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro</h3>', unsafe_allow_html=True)
-    st.caption("2025年12月23日 05:47：具体的アドバイスと全6名のメンター指名機能を完全統合しました。")
+    st.markdown('<h3 style="font-size: 26px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (究極フルセット版)</h3>', unsafe_allow_html=True)
+    st.caption("2025年12月23日 05:50：保存機能と全メンター機能を完全搭載しました。")
 
     # --- 1. 質問データ (24問) ---
     questions = [
@@ -52,7 +52,7 @@ def run_mbti_diagnostic():
         },
         "ツンデレな指導員": {
             "quote": "「ふん、あんたみたいなタイプは私が付いてないと危なっかしいわね。しっかりしなさいよ！」",
-            "actions": ["「姿勢を正しなさい！それだけで印象が変わるんだから。」", "「たまには自分を甘やかしなさいよね。ずっと頑張りすぎなのよ…心配してないわよ！」", "「今日は10分早く寝なさい。明日寝坊して困るのはあんたなんだからね！」"]
+            "actions": ["「姿勢を正しなさい！背筋を伸ばしなさい！それだけで印象が変わるんだから。」", "「たまには自分を甘やかしなさいよね。心配してないわよ！」", "「今日は10分早く寝なさい。明日寝坊して困るのはあんたなんだから。」"]
         },
         "論理的なビジネスコーチ": {
             "quote": "「あなたの能力を最大限に活かすための戦略を練ろう。まずは現状の分析からだ。」",
@@ -64,7 +64,27 @@ def run_mbti_diagnostic():
         }
     }
 
-    # --- 進捗管理 ---
+    # --- 3. 性格タイプ詳細DB (全16タイプ網羅) ---
+    mbti_db = {
+        "ISTJ": {"name": "管理者", "strength": "誠実、責任感、正確な実務", "weakness": "頑固、変化への抵抗", "mentor": "論理的なビジネスコーチ"},
+        "ISFJ": {"name": "擁護者", "strength": "献身的、忍耐強い、サポート力", "weakness": "自分を後回しにする、変化を恐れる", "mentor": "優しさに溢れるメンター (Default)"},
+        "INFJ": {"name": "提唱者", "strength": "洞察力、理想主義、深い共感", "weakness": "完璧主義、燃え尽きやすい", "mentor": "頼れるお姉さん"},
+        "INTJ": {"name": "建築家", "strength": "戦略的思考、独創性、高い合理性", "weakness": "批判的、人間関係を軽視しがち", "mentor": "カサネ・イズミ：論理と不確定要素"},
+        "ISTP": {"name": "巨匠", "strength": "適応力、技術的センス、冷静沈着", "weakness": "飽き性、孤立しやすい", "mentor": "ツンデレな指導員"},
+        "ISFP": {"name": "冒険家", "strength": "芸術的センス、柔軟性、調和", "weakness": "計画不足、ストレス耐性が低い", "mentor": "ギャル先生"},
+        "INFP": {"name": "仲介者", "strength": "深い思いやり、独創性、誠実さ", "weakness": "理想が高すぎる、傷つきやすい", "mentor": "頼れるお姉さん"},
+        "INTP": {"name": "論理学者", "strength": "客観的な分析、好奇心、斬新な発想", "weakness": "理屈っぽい、実行力が不足しがち", "mentor": "カサネ・イズミ：論理と不確定要素"},
+        "ESTP": {"name": "起業家", "strength": "行動力、即断即決、社交的", "weakness": "リスクを取りすぎる、忍耐不足", "mentor": "ツンデレな指導員"},
+        "ESFP": {"name": "エンターテイナー", "strength": "社交的、楽天家、今を楽しむ力", "weakness": "飽き性、深い思考を避けがち", "mentor": "ギャル先生"},
+        "ENFP": {"name": "広報運動家", "strength": "情熱、高い共感力、人脈作り", "weakness": "集中力の分散、事務作業が苦手", "mentor": "ギャル先生"},
+        "ENTP": {"name": "討論者", "strength": "機転が利く、独創的、知識欲", "weakness": "議論好きすぎる、ルール無視", "mentor": "ツンデレな指導員"},
+        "ESTJ": {"name": "幹部", "strength": "組織化、リーダーシップ、強い意志", "weakness": "融通が利かない、高圧的になりがち", "mentor": "論理的なビジネスコーチ"},
+        "ESFJ": {"name": "領事", "strength": "協力的、親切、実務的な管理", "weakness": "他人の目を気にしすぎる", "mentor": "優しさに溢れるメンター (Default)"},
+        "ENFJ": {"name": "主人公", "strength": "カリスマ性、献身的、説得力", "weakness": "おせっかい、理想の押し付け", "mentor": "頼れるお姉さん"},
+        "ENTJ": {"name": "指揮官", "strength": "強い意志、効率性、自信", "weakness": "冷徹に見える、短気な面がある", "mentor": "論理的なビジネスコーチ"}
+    }
+
+    # --- 4. 進捗管理 ---
     answered_count = 0
     for i in range(len(questions)):
         key = f"q_{i}"
@@ -82,7 +102,7 @@ def run_mbti_diagnostic():
         elif progress_per < 1.0: st.write("「いい感じ！半分超えたよ、あと少し！🔥」")
         else: st.write("「完璧！あんたマジ最高！ボタン押しちゃいな！💖」")
 
-    # --- 質問表示 ---
+    # --- 5. 質問表示 ---
     user_answers = {}
     for i, (q_text, axis, weight) in enumerate(questions):
         st.markdown(f"**Q{i+1}. {q_text}**")
@@ -91,7 +111,7 @@ def run_mbti_diagnostic():
                                    key=f"q_{i}", label_visibility="collapsed", horizontal=True, index=None)
         st.write("---")
 
-    # --- 診断実行 ---
+    # --- 6. 診断実行 ---
     if st.button("診断結果を詳しく見る ✨", use_container_width=True):
         if answered_count < len(questions):
             st.error(f"まだ回答していない質問があるよ！（残り {len(questions) - answered_count} 問）")
@@ -109,24 +129,7 @@ def run_mbti_diagnostic():
         identity = "-A" if scores["A-T"] >= 0 else "-T"
         full_res = mbti_core + identity
 
-        # --- 具体的アドバイスDB (主要タイプの例 - 実際には全16タイプ分展開可能) ---
-        mbti_db = {
-            "INFJ": {
-                "name": "提唱者",
-                "strength": "・複雑な人間関係や問題の本質を直感で見抜く力が抜群\n・強い倫理観を持ち、他人の成長を心から応援できる\n・静かな情熱を秘め、理想を現実に変えるための忍耐力がある",
-                "weakness": "・完璧主義すぎて、自分や他人の小さなミスが許せなくなる\n・一人で考え込みすぎて、周囲から「ミステリアス」と思われがち\n・他人の感情を吸収しすぎ、突然心のエネルギーが切れてしまう",
-                "mentor": "頼れるお姉さん"
-            },
-            "ENFP": {
-                "name": "広報運動家",
-                "strength": "・他人の才能を見つけ、やる気を引き出すのが上手い\n・コミュニケーション能力が高く、人脈を広げる天才\n・新しい可能性にワクワクし、常に変化を楽しめる",
-                "weakness": "・細かい事務作業が苦手で、書類ミスや忘れ物が多い\n・感情の起伏が激しく、やる気のムラがパフォーマンスに出る\n・一つのことを終える前に、次のことに手を出してしまう",
-                "mentor": "ギャル先生"
-            }
-            # ※他の14タイプも同様の構造で追加可能です
-        }
-        
-        detail = mbti_db.get(mbti_core, {"name": "未知の探求者", "strength": "独自の視点、行動力", "weakness": "計画性、他者の評価への敏感さ", "mentor": "優しさに溢れるメンター (Default)"})
+        detail = mbti_db.get(mbti_core)
 
         st.divider()
         st.markdown(f"## 判定結果：{full_res}（{detail['name']}）")
@@ -138,8 +141,7 @@ def run_mbti_diagnostic():
         fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[-12, 12])), showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 
-        # 具体的解説セクション
-        st.markdown("### 🔍 あなたの詳しい性格分析")
+        # 具体的解説
         col1, col2 = st.columns(2)
         with col1:
             st.info(f"✨ **ここがあなたの武器（強み）**\n\n{detail['strength']}")
@@ -148,17 +150,39 @@ def run_mbti_diagnostic():
 
         st.divider()
 
-        # 🤝 メンター指名セクション (全6名復活)
+        # 🤝 メンター指名セクション
         st.markdown("### 🤝 今日のメンターを指名する")
         selected_mentor = st.selectbox(
-            "指名されたメンターから、今のあなたにピッタリなアドバイスを贈ります。",
+            "今の気分に合わせてメンターを選んでね！",
             options=list(mentor_data.keys()),
             index=list(mentor_data.keys()).index(detail["mentor"]) if detail["mentor"] in mentor_data else 5
         )
 
         m_info = mentor_data[selected_mentor]
         st.chat_message("assistant").write(f"**{selected_mentor}**：「{m_info['quote']}」")
-        st.success(f"🎁 **今日のラッキーアクション**：{random.choice(m_info['actions'])}")
+        
+        current_action = random.choice(m_info['actions'])
+        st.success(f"🎁 **今日のラッキーアクション**：{current_action}")
+
+        # --- 7. 保存機能 ---
+        report_text = f"""【MBTI性格診断 Pro レポート】
+日時: 2025年12月23日 05:50
+判定結果: {full_res}（{detail['name']}）
+
+■ あなたの強み: {detail['strength']}
+■ 注意点: {detail['weakness']}
+
+■ メンター: {selected_mentor}
+■ ラッキーアクション: {current_action}
+"""
+        st.divider()
+        st.download_button(
+            label="診断結果をテキストでダウンロード 📥",
+            data=report_text,
+            file_name=f"MBTI_Result_{full_res}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
 
 if __name__ == "__main__":
     if "show_result" not in st.session_state:
