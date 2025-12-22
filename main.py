@@ -1,8 +1,9 @@
 import streamlit as st
+import plotly.graph_objects as go # ←追加！グラフを描くためのライブラリ
 
 def run_mbti_diagnostic():
     # タイトル
-    st.markdown('<h3 style="font-size: 24px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (A-T & メンター対応版)</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="font-size: 24px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (レーダーチャート対応版)</h3>', unsafe_allow_html=True)
     st.caption("24個の質問に答えて、あなたの詳細な性格タイプと相性の良いメンターを判定します。")
 
     # スコアの初期化
@@ -42,7 +43,8 @@ def run_mbti_diagnostic():
     with st.form("mbti_form"):
         user_answers = {}
         for i, (q_text, axis, weight) in enumerate(questions):
-            st.markdown(f"**Q{i+1}. {q_text}**")
+            # 少しデザインを調整（質問番号を見やすく）
+            st.markdown(f"<p style='margin-bottom: 0px; font-weight:bold;'>Q{i+1}. {q_text}</p>", unsafe_allow_html=True)
             user_answers[i] = st.radio(
                 f"q_{i}", 
                 options=[1, 2, 3, 4, 5], 
@@ -51,8 +53,9 @@ def run_mbti_diagnostic():
                 horizontal=True, 
                 index=2
             )
+            st.write("---") # 区切り線を追加
         
-        submit = st.form_submit_button("診断結果を詳しく見る ✨")
+        submit = st.form_submit_button("診断結果を詳しく見る ✨", use_container_width=True)
 
     if submit:
         # スコア計算
@@ -70,7 +73,7 @@ def run_mbti_diagnostic():
         identity = "-A" if current_scores["A-T"] >= 0 else "-T"
         full_res = mbti_core + identity
 
-        # 16タイプ詳細データ（ギャル先生をENFP/ESFP等に配置）
+        # 16タイプ詳細データ
         mbti_details = {
             "ISTJ": {"name": "管理者", "desc": "真面目で実用的。秩序とルールを重んじる誠実な人です。", "mentor": "論理的なビジネスコーチ"},
             "ISFJ": {"name": "擁護者", "desc": "献身的で温かい。周囲の人を静かに支える守護者です。", "mentor": "優しさに溢れるメンター (Default)"},
@@ -90,7 +93,6 @@ def run_mbti_diagnostic():
             "ENTJ": {"name": "指揮官", "desc": "大胆で意志が強い。目標達成のために道を切り拓く戦略家です。", "mentor": "論理的なビジネスコーチ"}
         }
 
-        # メンターのセリフ（ギャル先生を追加）
         mentor_quotes = {
             "カサネ・イズミ：論理と不確定要素": "「あなたのデータは極めて特異だ。その思考を最適化すれば、さらなる高みへ到達できる。」",
             "論理的なビジネスコーチ": "「あなたの能力を最大限に活かすための戦略を練ろう。まずは現状の分析からだ。」",
@@ -102,13 +104,63 @@ def run_mbti_diagnostic():
 
         detail = mbti_details.get(mbti_core)
 
-        # 表示エリア
+        # --- 結果表示エリア ---
         st.divider()
         st.balloons()
         
         st.markdown(f"## 判定結果：{full_res}")
         st.markdown(f"#### **{detail['name']}**")
         
+        # --- ▼ ここからレーダーチャート追加ブロック ▼ ---
+        
+        # グラフ用のデータを準備
+        categories = ['外向(E)', '感覚(S)', '思考(T)', '判断(J)', '自己主張(A)']
+        # スコアをリスト化し、最後の点を最初と同じにして閉じた形にする
+        values = [current_scores["E-I"], current_scores["S-N"], current_scores["T-F"], current_scores["J-P"], current_scores["A-T"]]
+        values_for_plot = values + [values[0]]
+        categories_for_plot = categories + [categories[0]]
+
+        # Plotlyでレーダーチャートを作成
+        fig = go.Figure(data=go.Scatterpolar(
+              r=values_for_plot,
+              theta=categories_for_plot,
+              fill='toself',
+              name='あなたのスコア',
+              line_color='#4A90E2', # 線の色
+              fillcolor='rgba(74, 144, 226, 0.3)' # 塗りつぶしの色（半透明）
+        ))
+
+        # グラフのレイアウト設定
+        fig.update_layout(
+          polar=dict(
+            radialaxis=dict(
+              visible=True,
+              range=[-12, 12], # 軸の範囲（少し余裕を持たせる）
+              tickfont=dict(size=10),
+              gridcolor='lightgrey' # グリッド線の色
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=14, weight='bold') # 各軸のラベル文字サイズ
+            )
+          ),
+          showlegend=False,
+          title=dict(text="📊 あなたの性格バランスチャート", x=0.5), # タイトルを中央寄せ
+          margin=dict(t=80, b=30, l=30, r=30) # 余白調整
+        )
+
+        # Streamlitでグラフを表示
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # グラフの見方を説明
+        st.caption("""
+        **【グラフの見方】**
+        中心が「0点（中立）」です。
+        青いエリアが**外側（プラス方向）**に伸びているほど、ラベルの性質（E, S, T, J, A）が強く、
+        **中心より内側（マイナス方向）**に凹んでいるほど、対になる性質（I, N, F, P, T）が強いことを示します。
+        """)
+        st.divider()
+        # --- ▲ ここまでレーダーチャート追加ブロック ▲ ---
+
         # 性格の特徴を表示
         st.info(f"💡 **あなたの特徴 ({identity})**\n\n{detail['desc']}\n\n" + 
                 ("あなたは自分に自信を持ち、周囲の影響を受けにくい安定したタイプです。" if identity == "-A" 
