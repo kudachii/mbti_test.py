@@ -1,16 +1,14 @@
-
 import streamlit as st
 import plotly.graph_objects as go
 
 def run_mbti_diagnostic():
-    # ページ設定
     st.set_page_config(page_title="MBTI性格診断 Pro", page_icon="🧠", layout="wide")
 
     # タイトル
-    st.markdown('<h3 style="font-size: 26px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (サイドバー進捗対応版)</h3>', unsafe_allow_html=True)
-    st.caption("24個の質問に答えて、あなたの詳細な性格タイプを判定します。")
+    st.markdown('<h3 style="font-size: 26px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (完全未選択スタート版)</h3>', unsafe_allow_html=True)
+    st.caption("24個の質問に答えて、あなたの性格タイプとメンターを判定します。最初は未選択の状態です。")
 
-    # 質問データ（全24問）
+    # 質問データ
     questions = [
         ("多人数で集まるイベントに参加すると元気が出る", "E-I", 1),
         ("自分の考えを整理するときは、誰かに話すより一人で考えたい", "E-I", -1),
@@ -38,15 +36,15 @@ def run_mbti_diagnostic():
         ("他人の目が気になり、自分を過小評価してしまうことがある", "A-T", -1),
     ]
 
-    # --- ① 進捗状況の計算 (リアルタイム) ---
-    # ラジオボタンで選ばれた値をカウント（初期値3以外を選んだら回答済みとする）
+    # --- 進捗の計算 (session_stateに値があるかチェック) ---
     answered_count = 0
     for i in range(len(questions)):
         key = f"q_{i}"
-        if key in st.session_state and st.session_state[key] != 3:
+        # 値が None（未選択）でない場合のみカウント
+        if key in st.session_state and st.session_state[key] is not None:
             answered_count += 1
     
-    # --- ② サイドバーに進捗バーを固定 ---
+    # --- サイドバーに進捗バーを表示 ---
     with st.sidebar:
         st.header("📊 診断の進捗")
         progress_per = answered_count / len(questions)
@@ -54,31 +52,40 @@ def run_mbti_diagnostic():
         st.write(f"**{answered_count} / {len(questions)} 問** 回答済み")
         
         if answered_count == len(questions):
-            st.success("✨ 全問回答完了！ ✨")
+            st.success("✨ 全問回答完了！結果を見よう！ ✨")
         else:
-            st.warning("すべての質問に答えてね！")
+            st.info("質問をポチッと選ぶとバーが伸びるよ！")
         
         st.divider()
-        st.caption("※回答を変更すると、リアルタイムで進捗バーが更新されます。")
+        # メンターからの応援メッセージ（サイドバー版）
+        st.markdown("**ギャル先生からのひと言**")
+        if progress_per < 0.5:
+            st.write("「まずは直感でポチポチいこー！✨」")
+        elif progress_per < 1.0:
+            st.write("「いい感じ！半分超えたよ、あと少し！🔥」")
+        else:
+            st.write("「完璧！あんたマジ最高！診断ボタン押しちゃいな！💖」")
 
-    # --- ③ 質問表示エリア ---
+    # --- 質問表示エリア ---
     user_answers = {}
     for i, (q_text, axis, weight) in enumerate(questions):
         st.markdown(f"**Q{i+1}. {q_text}**")
+        # index=None にすることで初期選択を解除
         user_answers[i] = st.radio(
             f"radio_{i}", 
             options=[1, 2, 3, 4, 5], 
             format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
-            key=f"q_{i}", # session_stateに保存
+            key=f"q_{i}", 
             label_visibility="collapsed", 
-            horizontal=True
+            horizontal=True,
+            index=None  # ← ここが重要！
         )
         st.write("---")
 
-    # --- ④ 診断実行ボタン ---
+    # --- 診断実行ボタン ---
     if st.button("診断結果を詳しく見る ✨", use_container_width=True):
         if answered_count < len(questions):
-            st.error("まだ未回答の質問があるよ！サイドバーを確認してね。")
+            st.error(f"まだ回答していない質問があるよ！（残り {len(questions) - answered_count} 問）")
         else:
             st.balloons()
             
@@ -87,7 +94,7 @@ def run_mbti_diagnostic():
             for i, (q_text, axis, weight) in enumerate(questions):
                 current_scores[axis] += (user_answers[i] - 3) * weight
 
-            # タイプ判定
+            # 判定ロジック・メンター・チャート表示 (前回のコードを継承)
             mbti_core = ("E" if current_scores["E-I"] >= 0 else "I") + \
                         ("S" if current_scores["S-N"] >= 0 else "N") + \
                         ("T" if current_scores["T-F"] >= 0 else "F") + \
@@ -114,6 +121,7 @@ def run_mbti_diagnostic():
                 "ENFJ": {"name": "主人公", "desc": "カリスマ性があり共感的。人々を導き、励ますリーダーです。", "mentor": "頼れるお姉さん"},
                 "ENTJ": {"name": "指揮官", "desc": "大胆で意志が強い。目標達成のために道を切り拓く戦略家です。", "mentor": "論理的なビジネスコーチ"}
             }
+            
             mentor_quotes = {
                 "カサネ・イズミ：論理と不確定要素": "「あなたのデータは極めて特異だ。その思考を最適化すれば、さらなる高みへ到達できる。」",
                 "論理的なビジネスコーチ": "「あなたの能力を最大限に活かすための戦略を練ろう。まずは現状の分析からだ。」",
@@ -125,7 +133,7 @@ def run_mbti_diagnostic():
 
             detail = mbti_details.get(mbti_core)
 
-            # 結果表示エリア
+            # 結果表示
             st.divider()
             st.markdown(f"## 判定結果：{full_res}（{detail['name']}）")
 
