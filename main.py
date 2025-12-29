@@ -91,7 +91,7 @@ def run_mbti_diagnostic():
             }
         },
         "INFJ": {
-            "name": "提唱者", "animal": "思慮深いフクロウ", "catchphrase": "「夜の静寂の中で、未来의光を見通す賢者」",
+            "name": "提唱者", "animal": "思慮深いフクロウ", "catchphrase": "「夜の静寂の中で、未来の光を見通す賢者」",
             "strength": "本質を見抜く洞察力、カリスマ的な理想、才能の発見。", "weakness": "理想への絶望、過剰な自分への追い込み、感情疲労。",
             "mentor": "頼れるお姉さん",
             "messages": {
