@@ -298,9 +298,10 @@ def run_mbti_diagnostic():
     if not st.session_state["show_result"]:
         st.title("性格診断クエスト 🐾")
         
-        nswered_count = 0
+        # --- 修正後のカウント処理 ---
+        answered_count = 0  # ★まず最初に0を代入して初期化する（これが重要！）
         for i in range(len(questions)):
-            # セッションにデータがあって、かつ中身が空(None)じゃないときだけカウント
+            # セッションから回答を取得。まだ選ばれていなければNoneが返る
             val = st.session_state.get(f"q_{i}_{st.session_state['run_count']}")
             if val is not None:
                 answered_count += 1
