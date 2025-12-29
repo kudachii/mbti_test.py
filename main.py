@@ -359,14 +359,22 @@ def run_mbti_diagnostic():
         else: st.write("「完璧！あんたマジ最高！ボタン押しちゃいな！💖」")
 
     # --- 5. 質問表示 ---
+    # --- 5. 質問表示（リセット対応版） ---
     user_answers = {}
     for i, (q_text, axis, weight) in enumerate(questions):
         st.markdown(f"**Q{i+1}. {q_text}**")
-        user_answers[i] = st.radio(f"radio_{i}", options=[1, 2, 3, 4, 5], 
-                                   format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
-                                   key=f"q_{i}", label_visibility="collapsed", horizontal=True, index=None)
+        # index=2 にすることで、リセット時に「中立」に戻るように設定！
+        user_answers[i] = st.radio(
+            f"radio_{i}", 
+            options=[1, 2, 3, 4, 5], 
+            format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
+            key=f"q_{i}", 
+            label_visibility="collapsed", 
+            horizontal=True, 
+            index=2  # ← ここを None から 2 に変更したよ！
+        )
         st.write("---")
-
+        
     # --- 6. 診断実行 ---
     if st.button("診断結果を詳しく見る ✨", use_container_width=True):
         if answered_count < len(questions):
