@@ -485,12 +485,8 @@ def run_mbti_diagnostic():
         # 👇 ここに「やり直しボタン」を追記！
         st.markdown("---")
         if st.button("🔄 別の結果も見てみる（最初からやり直す）", use_container_width=True):
-            # 1. 記録されているデータを全部消去！
-            st.session_state.clear()
-            # 2. 結果表示フラグを念のためFalseに（clearで消えるけど確実にするため）
-            st.session_state["show_result"] = False
-            # 3. まっさらな状態で再起動！
-            st.rerun()
+            st.session_state.clear()  # 記憶を全部消す！
+            st.rerun()                # 最初から読み直す！
 
 if __name__ == "__main__":
     if "show_result" not in st.session_state:
