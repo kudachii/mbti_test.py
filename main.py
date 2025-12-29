@@ -324,7 +324,7 @@ def run_mbti_diagnostic():
                     f"radio_{i}", options=[1, 2, 3, 4, 5],
                     format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
                     key=f"q_{i}_{st.session_state['run_count']}", 
-                    label_visibility="collapsed", horizontal=True, index=2
+                    label_visibility="collapsed", horizontal=True, index=None
                 )
                 st.write("---")
 
