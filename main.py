@@ -465,7 +465,7 @@ def run_mbti_diagnostic():
 
 ■ メンター: {selected_mentor}
 ■ ラッキーアクション: {current_action}
-"""
+""" 
         st.download_button(
             label="診断結果をダウンロードして保存 📥",
             data=report_text,
@@ -473,6 +473,11 @@ def run_mbti_diagnostic():
             mime="text/plain",
             use_container_width=True
         )
+        
+        # 👇 ここに「やり直しボタン」を追記！
+        st.markdown("---")
+        if st.button("🔄 別の結果も見てみる（最初からやり直す）", use_container_width=True):
+            st.rerun()
 
 if __name__ == "__main__":
     if "show_result" not in st.session_state:
