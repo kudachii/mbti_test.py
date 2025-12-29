@@ -365,19 +365,26 @@ def run_mbti_diagnostic():
     # --- 5. 質問表示 ---
     # --- 5. 質問表示（リセット対応版） ---
     user_answers = {}
-    for i, (q_text, axis, weight) in enumerate(questions):
-        st.markdown(f"**Q{i+1}. {q_text}**")
-        # index=2 にすることで、リセット時に「中立」に戻るように設定！
-        user_answers[i] = st.radio(
-            f"radio_{i}", 
-            options=[1, 2, 3, 4, 5], 
-            format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
-            key=f"q_{i}", 
-            label_visibility="collapsed", 
-            horizontal=True, 
-            index=2  # ← ここを None から 2 に変更したよ！
-        )
-        st.write("---")
+# --- 5. 質問表示（コンテナ魔法版） ---
+    # 実行回数ごとに名前が変わるコンテナを作ることで、中身を強制リセット！
+# --- 5. 質問表示（コンテナ魔法版） ---
+    # 実行回数ごとに名前が変わるコンテナを作ることで、中身を強制リセット！
+    with st.container(key=f"questions_container_{st.session_state['run_count']}"):
+# --- 5. 質問表示（コンテナ魔法版） ---
+with st.container(key=f"questions_container_{st.session_state['run_count']}"):
+        user_answers = {}
+        for i, (q_text, axis, weight) in enumerate(questions):
+            st.markdown(f"**Q{i+1}. {q_text}**")
+            user_answers[i] = st.radio(
+                f"radio_{i}", 
+                options=[1, 2, 3, 4, 5], 
+                format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
+                key=f"q_{i}_{st.session_state['run_count']}", # ここにも回数を入れる！
+                label_visibility="collapsed", 
+                horizontal=True, 
+                index=2
+            )
+            st.write("---")
         
     # --- 6. 診断実行 ---
     if st.button("診断結果を詳しく見る ✨", use_container_width=True):
