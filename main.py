@@ -336,16 +336,28 @@ def run_mbti_diagnostic():
                 st.rerun()
 
     else:
-        st.balloons()
-        scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0, "A-T": 0}
-        for i, (_, axis, weight) in enumerate(questions):
-            val = st.session_state.get(f"q_{i}_{st.session_state['run_count']}", 3)
-            scores[axis] += (val - 3) * weight
+        # --- ★ここから修正：結果をセッションに固定する ---
+        if "final_detail" not in st.session_state:
+            st.balloons()
+            scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0, "A-T": 0}
+            for i, (_, axis, weight) in enumerate(questions):
+                val = st.session_state.get(f"q_{i}_{st.session_state['run_count']}", 3)
+                scores[axis] += (val - 3) * weight
 
-        m_core = ("E" if scores["E-I"] >= 0 else "I") + ("S" if scores["S-N"] >= 0 else "N") + \
-                 ("T" if scores["T-F"] >= 0 else "F") + ("J" if scores["J-P"] >= 0 else "P")
-        full_res = m_core + ("-A" if scores["A-T"] >= 0 else "-T")
-        detail = mbti_db.get(m_core, mbti_db["ISTJ"])
+            m_core = ("E" if scores["E-I"] >= 0 else "I") + ("S" if scores["S-N"] >= 0 else "N") + \
+                     ("T" if scores["T-F"] >= 0 else "F") + ("J" if scores["J-P"] >= 0 else "P")
+            full_res = m_core + ("-A" if scores["A-T"] >= 0 else "-T")
+            
+            # 計算結果をセッションに保存（一度だけ実行される）
+            st.session_state["final_full_res"] = full_res
+            st.session_state["final_detail"] = mbti_db.get(m_core, mbti_db["ISTJ"])
+            st.session_state["final_scores"] = scores
+
+        # 表示にはセッションに保存された「固定データ」を使う
+        full_res = st.session_state["final_full_res"]
+        detail = st.session_state["final_detail"]
+        scores = st.session_state["final_scores"]
+        # --- ★ここまで修正 ---
 
         st.markdown(f"## 判定結果：{full_res}")
         st.markdown(f"### あなたを動物に例えると… 『 {detail['animal']} 』")
