@@ -7,6 +7,10 @@ def run_mbti_diagnostic():
 
     st.markdown('<h3 style="font-size: 26px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (超具体的アドバイス版)</h3>', unsafe_allow_html=True)
     st.caption("2025年12月23日 05:52：16タイプすべての解説を限界まで具体化しました。")
+    
+    # 診断のセッション回数をカウントする仕組みを作るよ
+    if "run_count" not in st.session_state:
+        st.session_state["run_count"] = 0
 
     # --- 1. 質問データ (24問) ---
     questions = [
