@@ -3,14 +3,55 @@ import plotly.graph_objects as go
 import random
 
 def run_mbti_diagnostic():
-    st.set_page_config(page_title="MBTI性格診断 Pro", page_icon="🧠", layout="wide")
+    # --- 1. 初期設定 ---
+    if "show_result" not in st.session_state:
+        st.session_state["show_result"] = False
 
-    st.markdown('<h3 style="font-size: 26px; font-weight: bold; color: #4A90E2;">🧠 性格タイプ診断 Pro (超具体的アドバイス版)</h3>', unsafe_allow_html=True)
-    st.caption("2025年12月23日 05:52：16タイプすべての解説を限界まで具体化しました。")
+    # --- 2. 画面の切り替え判定 ---
     
-    # 診断のセッション回数をカウントする仕組みを作るよ
-    if "run_count" not in st.session_state:
-        st.session_state["run_count"] = 0
+    # 【A】まだ「診断ボタン」を押していない時（質問モード）
+    if not st.session_state["show_result"]:
+        st.title("🐾 性格診断クエスト")
+        st.write("直感で答えてね！")
+        
+        user_answers = {}
+        for i, (q_text, axis, weight) in enumerate(questions):
+            st.markdown(f"**Q{i+1}. {q_text}**")
+            # keyを固定して index=2(中立) にする
+            user_answers[i] = st.radio(
+                f"radio_{i}", options=[1, 2, 3, 4, 5],
+                format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
+                key=f"q_{i}", label_visibility="collapsed", horizontal=True, index=2
+            )
+            st.write("---")
+        
+        if st.button("診断結果を見る！ 🚀", use_container_width=True):
+            # 答えを計算用にセッションに保存してスイッチON！
+            st.session_state["final_answers"] = user_answers
+            st.session_state["show_result"] = True
+            st.rerun()
+
+    # 【B】「診断ボタン」を押したあと（結果モード）
+    else:
+        # 保存しておいた回答を読み込む
+        user_answers = st.session_state["final_answers"]
+        
+        # --- ここで点数計算（以前のロジック） ---
+        # (score_e_i, score_s_n などの計算コードをここに入れる)
+        # (mbti_type, full_res を導き出すコード)
+        
+        # --- 🐾 診断結果の表示（タブやメンターのコードをここに全部入れる） ---
+        st.balloons()
+        st.success(f"結果：{full_res}")
+        
+        # (中略：さっき作ったタブやメンター、ダウンロードボタンのコード)
+
+        # --- 🔄 最後にやり直しボタン ---
+        st.divider()
+        if st.button("🔄 別の結果も見てみる（最初からやり直す）", use_container_width=True):
+            # セッションを全消去して、最初（質問モード）に強制的に戻す
+            st.session_state.clear()
+            st.rerun()
 
     # --- 1. 質問データ (24問) ---
     questions = [
