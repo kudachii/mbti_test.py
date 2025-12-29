@@ -244,7 +244,7 @@ def run_mbti_diagnostic():
                 "論理的なビジネスコーチ": "生産性の高さは卓越しています。次は後継者育成（デレゲーション）に注力してください。"
             }
         }
-    }
+    
     # --- 4. 進捗管理 ---
     answered_count = 0
     for i in range(len(questions)):
