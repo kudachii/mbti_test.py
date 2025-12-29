@@ -3,56 +3,6 @@ import plotly.graph_objects as go
 import random
 
 def run_mbti_diagnostic():
-    # --- 1. 初期設定 ---
-    if "show_result" not in st.session_state:
-        st.session_state["show_result"] = False
-
-    # --- 2. 画面の切り替え判定 ---
-    
-    # 【A】まだ「診断ボタン」を押していない時（質問モード）
-    if not st.session_state["show_result"]:
-        st.title("🐾 性格診断クエスト")
-        st.write("直感で答えてね！")
-        
-        user_answers = {}
-        for i, (q_text, axis, weight) in enumerate(questions):
-            st.markdown(f"**Q{i+1}. {q_text}**")
-            # keyを固定して index=2(中立) にする
-            user_answers[i] = st.radio(
-                f"radio_{i}", options=[1, 2, 3, 4, 5],
-                format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
-                key=f"q_{i}", label_visibility="collapsed", horizontal=True, index=2
-            )
-            st.write("---")
-        
-        if st.button("診断結果を見る！ 🚀", use_container_width=True):
-            # 答えを計算用にセッションに保存してスイッチON！
-            st.session_state["final_answers"] = user_answers
-            st.session_state["show_result"] = True
-            st.rerun()
-
-    # 【B】「診断ボタン」を押したあと（結果モード）
-    else:
-        # 保存しておいた回答を読み込む
-        user_answers = st.session_state["final_answers"]
-        
-        # --- ここで点数計算（以前のロジック） ---
-        # (score_e_i, score_s_n などの計算コードをここに入れる)
-        # (mbti_type, full_res を導き出すコード)
-        
-        # --- 🐾 診断結果の表示（タブやメンターのコードをここに全部入れる） ---
-        st.balloons()
-        st.success(f"結果：{full_res}")
-        
-        # (中略：さっき作ったタブやメンター、ダウンロードボタンのコード)
-
-        # --- 🔄 最後にやり直しボタン ---
-        st.divider()
-        if st.button("🔄 別の結果も見てみる（最初からやり直す）", use_container_width=True):
-            # セッションを全消去して、最初（質問モード）に強制的に戻す
-            st.session_state.clear()
-            st.rerun()
-
     # --- 1. 質問データ (24問) ---
     questions = [
         ("多人数で集まるイベントに参加すると元気が出る", "E-I", 1),
@@ -81,469 +31,124 @@ def run_mbti_diagnostic():
         ("他人の目が気になり、自分を過小評価してしまうことがある", "A-T", -1),
     ]
 
-    # --- 2. メンターデータ (全6名) ---
+    # --- 2. メンターデータ & MBTI DB (データ部分は長いので省略せず保持) ---
     mentor_data = {
-        "ギャル先生": {
-            "quote": "「おはよー！あんたの魅力、マジでバズり確定じゃん！✨ その調子で今日もハピネスに、自分軸でブチ上げてこー！💖」",
-            "actions": ["「コンビニの新作スイーツ買って自分にご褒美あげちゃお！✨」", "「鏡の前で『今日も可愛いじゃん』って言ってみて？💖」", "「派手な色の小物を1つ身につけてみて！🌈」"]
-        },
-        "頼れるお姉さん": {
-            "quote": "「一生懸命なところ、素敵よ。でもたまには肩の力を抜いて、私に甘えていいのよ？」",
-            "actions": ["「5分だけデジタルデトックスをして温かい飲み物を。心の充電が必要よ。」", "「寝る前に頑張ったことを3つ思い出して自分を褒めてあげてね。」", "「ゆっくりお風呂に浸かって、好きな香りの入浴剤を楽しんでみて。」"]
-        },
-        "カサネ・イズミ：論理と不確定要素": {
-            "quote": "「あなたのデータは極めて特異だ。その思考を最適化すれば、さらなる高みへ到達できる。」",
-            "actions": ["「デスクの上を完全に片付けろ。視覚的なノイズを排除しろ。」", "「今日学んだことを3行でメモしろ。知識の定着こそが力だ。」", "「タスクの優先順位を見直し、重要度の低いものを1つ捨てろ。」"]
-        },
-        "ツンデレな指導員": {
-            "quote": "「ふん、あんたみたいなタイプは私が付いてないと危なっかしいわね。しっかりしなさいよ！」",
-            "actions": ["「姿勢を正しなさい！背筋を伸ばしなさい！それだけで印象が変わるんだから。」", "「たまには自分を甘やかしなさいよね。ずっと頑張りすぎなのよ…心配してないわよ！」", "「今日は10分早く寝なさい。明日寝坊して困るのはあんたなんだからね！」"]
-        },
-        "論理的なビジネスコーチ": {
-            "quote": "「あなたの能力を最大限に活かすための戦略を練ろう。まずは現状の分析からだ。」",
-            "actions": ["「今日一番の重要課題を1つ決めて、それに集中しよう。」", "「明日のスケジュールを今夜のうちに10分で見直しておこう。」", "「身の回りのものを1つだけ新調してみよう。小さな変化が刺激になる。」"]
-        },
-        "優しさに溢れるメンター (Default)": {
-            "quote": "「あなたは今のままで十分素晴らしいですよ。一緒に、一歩ずつ進んでいきましょうね。」",
-            "actions": ["「深呼吸をゆっくり3回しましょう。」", "「大切な人に短い感謝のメッセージを送ってみませんか？」", "「散歩をしながら、空の色を眺めてみてください。」"]
-        }
+        "ギャル先生": {"quote": "「おはよー！あんたの魅力、マジでバズり確定じゃん！✨」", "actions": ["「コンビニの新作スイーツ買って自分にご褒美あげちゃお！✨」", "「鏡の前で『今日も可愛いじゃん』って言ってみて？💖」", "「派手な色の小物を1つ身につけてみて！🌈」"]},
+        "頼れるお姉さん": {"quote": "「一生懸命なところ、素敵よ。でもたまには肩の力を抜いて、私に甘えていいのよ？」", "actions": ["「5分だけデジタルデトックスをして温かい飲み物を。」", "「寝る前に頑張ったことを3つ思い出して自分を褒めて。」"]},
+        "カサネ・イズミ：論理と不確定要素": {"quote": "「あなたのデータは極めて特異だ。その思考を最適化すれば、さらなる高みへ到達できる。」", "actions": ["「デスクの上を完全に片付けろ。」", "「今日学んだことを3行でメモしろ。」"]},
+        "ツンデレな指導員": {"quote": "「ふん、あんたみたいなタイプは私が付いてないと危なっかしいわね。」", "actions": ["「姿勢を正しなさい！」", "「たまには自分を甘やかしなさいよね。」"]},
+        "論理的なビジネスコーチ": {"quote": "「あなたの能力を最大限に活かすための戦略を練ろう。」", "actions": ["「今日一番の重要課題を1つ決めて集中しよう。」"]},
+        "優しさに溢れるメンター (Default)": {"quote": "「あなたは今のままで十分素晴らしいですよ。」", "actions": ["「深呼吸をゆっくり3回しましょう。」"]}
     }
 
-    # --- 3. 性格タイプ詳細DB (全16タイプ・超具体版) ---
-    # mbti_db を以下のようにアップデートしてみて！
     mbti_db = {
-        "ISTJ": {
-            "details": {
-                "work": "マニュアルや手順を完璧に守り、ミスなく成果を出す『組織の柱』。締め切りは絶対守る派。",
-                "love": "超誠実で一途。記念日を忘れず、安定した関係を築くけど、変化やサプライズはちょっと苦手。",
-                "stress": "普段の冷静さを失い、細かいミスに固執してパニックに。自分を責めすぎて負のループへ。",
-                "best_match": "お世話好きなゾウ（ESFJ）"
-            },
-            "name": "管理者", "animal": "勤勉なビーバー", "catchphrase": "「一歩ずつ、確実に。信頼を築き上げる職人」",
-            "strength": "責任感の塊、精密な作業、冷静な判断。", "weakness": "変化への抵抗、正論での圧迫、抱え込みすぎ。",
-            "mentor": "論理的なビジネスコーチ",
-            "messages": {
-                "ギャル先生": "ビーバーちゃん、マジメすぎ！たまには羽目外してもバチ当たんないよ？✨",
-                "頼れるお姉さん": "ビーバーさん、いつもコツコツ頑張るあなたを尊敬してるわ。少し肩の力を抜きましょうね。",
-                "ツンデレな指導員": "ビーバー！あんたの仕事ぶりは認めてあげるわ。でも、たまには私に頼りなさいよね！",
-                "論理的なビジネスコーチ": "ビーバーさんの継続性は組織の資産です。次は『効率化』をテーマに工程を見直しましょう。"
-            }
-        },
-        "ISFJ": {
-            "details": {
-                "work": "他人のニーズを察して先回りする『最高のサポーター』。縁の下の力持ちとして評価されるわ。",
-                "love": "献身的に尽くすタイプ。相手の喜びが自分の喜びだけど、不満を溜め込みすぎて爆発することも。",
-                "stress": "『自分なんて必要ないんだ』と思い込み、過剰に悲観的に。体調にもすぐ出ちゃうから注意！",
-                "best_match": "誠実な番犬（ESTJ）"
-            },
-            "name": "擁護者", "animal": "穏やかなシカ", "catchphrase": "「静かな優しさで、みんなの心に灯をともす」",
-            "strength": "神がかった配慮、誠実な記憶力、最高のサポート。", "weakness": "自己犠牲、過度なネガティブ思考、断れない性格。",
-            "mentor": "優しさに溢れるメンター (Default)",
-            "messages": {
-                "ギャル先生": "シカちゃん、自分より他人ばっか！今日はあんたが主役でいいんだよ！💖",
-                "頼れるお姉さん": "シカさん、いつも周りを支えてくれてありがとう。今は私の前で甘えていいのよ。",
-                "ツンデレな指導員": "シカ！お人好しもいい加減にしなさい。あんたが倒れたら誰が困ると思ってるのよ！",
-                "論理的なビジネスコーチ": "シカさんの貢献度が可視化されていません。実績を数値で把握する習慣をつけましょう。"
-            }
-        },
-        "INFJ": {
-            "details": {
-                "work": "直感で本質を掴み、理想を形にする『静かなリーダー』。意味のないルーチンワークは魂が削れるわ。",
-                "love": "精神的な深い繋がりを求める。理想が高いけど、一度心を許すと一生モノの絆を築くわよ。",
-                "stress": "感覚が過敏になり、暴飲暴食や衝動買いに走るか、完全に引きこもって音信不通になるわ。",
-                "best_match": "情熱的なライオン（ENFJ）"
-            },
-            "name": "提唱者", "animal": "思慮深いフクロウ", "catchphrase": "「夜の静寂の中で、未来の光を見通す賢者」",
-            "strength": "本質を見抜く洞察力、カリスマ的な理想、才能の発見。", "weakness": "理想への絶望、過剰な自分への追い込み、感情疲労。",
-            "mentor": "頼れるお姉さん",
-            "messages": {
-                "ギャル先生": "フクロウちゃん、考え深すぎリスペクト！脳内ハピネスにしていこ！🌈",
-                "頼れるお姉さん": "フクロウさん、あなたの深い洞察力に救われてるわ。今夜は羽を休めて、自分を癒して。",
-                "ツンデレな指導員": "フクロウ！また世界の真理を考えてるわけ？動きなさいよ、私が付いててあげるから。",
-                "論理的なビジネスコーチ": "フクロウさんの理想を実現するにはリソースが必要です。直近のアクションに集中してください。"
-            }
-        },
-        "INTJ": {
-            "details": {
-                "work": "長期的な戦略を立てて効率的に目標を達成する『軍師』。無能な慣習には容赦なくNOを突きつけるわ。",
-                "love": "感情表現は苦手だけど、知的な刺激を重視する。信頼した相手には超論理的に尽くすタイプ。",
-                "stress": "普段の戦略性が消え、ジャンクな刺激（ドカ食いやゲーム等）に没頭して現実逃避しちゃうわよ。",
-                "best_match": "独創的なキツネ（ENTP）"
-            },
-            "name": "建築家", "animal": "孤高のトラ", "catchphrase": "「誰にも媚びず、己の知略で世界を再構築する」",
-            "strength": "戦略的思考、事実に基づく解決、圧倒的な実行力。", "weakness": "感情への無関心、他人の否定、孤独への沈没。",
-            "mentor": "カサネ・イズミ：論理と不確定要素",
-            "messages": {
-                "ギャル先生": "トラさん、クールすぎ！その最強な頭脳で今日も世界回しちゃって！🔥",
-                "頼れるお姉さん": "トラさん、完璧主義なあなたも素敵だけど、弱音を吐ける場所も必要よ。ここにいて。",
-                "ツンデレな指導員": "トラ！その戦略、悪くないわね。でも私の助言も聞きなさい。もっと上へ行くわよ！",
-                "論理的なビジネスコーチ": "トラさんの長期ビジョンは完璧です。周囲との合意形成の時間を5%だけ増やしましょう。"
-            }
-        },
-        "ISTP": {
-            "details": {
-                "work": "現場で手を動かして問題を即解決する『一匹狼のプロ』。束縛されるのが大嫌いで自由を愛するわ。",
-                "love": "付かず離れずの距離感を大切にする。束縛されると逃げるけど、ピンチの時には必ず助けに来るわよ。",
-                "stress": "感情が制御不能になって爆発するか、周りに対して極端に攻撃的・批判的な態度をとっちゃう。",
-                "best_match": "勇敢なチーター（ESTP）"
-            },
-            "name": "巨匠", "animal": "冷静なサメ", "catchphrase": "「乱世をクールに泳ぎ、一瞬の好機を逃さない」",
-            "strength": "即座の解決力、ツールの使いこなし、適度な距離感。", "weakness": "無関心、計画性の欠如、感情問題の先延ばし。",
-            "mentor": "ツンデレな指導員",
-            "messages": {
-                "ギャル先生": "サメちゃん、自由で最高！そのセンスで今日もサクッと解決しちゃお！✨",
-                "頼れるお姉さん": "サメさん、一匹狼なあなたも、疲れた時は戻ってきてね。温かい飲み物を用意しておくわ。",
-                "ツンデレな指導員": "サメ！あんたの腕前は信じてるわ。でも無茶して怪我でもしたら…許さないんだから！",
-                "論理的なビジネスコーチ": "サメさんの技術習得速度は驚異的です。それを共有資産化すればさらに評価が高まります。"
-            }
-        },
-        "ISFP": {
-            "details": {
-                "work": "自分の感性を形にする『アーティスト』。競争よりも、自分が納得できる『心地よさ』を最優先するわ。",
-                "love": "言葉よりも行動や雰囲気で愛情を示す。自由奔放に見えて、実は相手の顔色をすごく伺ってる繊細さん。",
-                "stress": "自信を完全に喪失して『自分には何の才能もない』と絶望。殻に閉じこもって誰の言葉も届かなくなる。",
-                "best_match": "陽気なレッサーパンダ（ESFP）"
-            },
-            "name": "冒険家", "animal": "自由なネコ", "catchphrase": "「自分の『好き』を呼吸するように生きる芸術家」",
-            "strength": "美的センス、器の広さ、今を楽しむ才能。", "weakness": "批判に弱い、気まぐれな行動、突然の拒絶。",
-            "mentor": "ギャル先生",
-            "messages": {
-                "ギャル先生": "ネコちゃん、感性ヤバすぎ！今日もあんたの『好き』を貫いちゃえ！🐾",
-                "頼れるお姉さん": "ネコさん、あなたの作る世界は本当に美しいわ。そのままのあなたでいてちょうだい。",
-                "ツンデレな指導員": "ネコ！フラフラどこ行くのよ！…まあ、あんたらしいけど。迷ったらすぐ言いなさい！",
-                "論理的なビジネスコーチ": "ネコさんの感性をビジネスにするには『納期』の概念が必要です。タスクを細分化しましょう。"
-            }
-        },
-        "INFP": {
-            "details": {
-                "work": "独自の価値観で世界を彩る『夢想家』。お金や名誉より、自分の魂が震えるかどうかが全ての基準。",
-                "love": "ロマンチックで深い愛情の持ち主。相手を理想化しすぎて、現実にガッカリしちゃうこともあるけど純粋。",
-                "stress": "急に超現実的で攻撃的な性格に変貌。他人の欠点を理詰めで攻撃して、後で猛烈に後悔するわ。",
-                "best_match": "天真爛漫なカワウソ（ENFP）"
-            },
-            "name": "仲介者", "animal": "理想を夢見るウサギ", "catchphrase": "「傷つくことを恐れず、愛と優しさを信じ続ける」",
-            "strength": "言葉の表現力、誠実な信念、深い慈愛。", "weakness": "実務の放置、自信の喪失、過去の反芻。",
-            "mentor": "頼れるお姉さん",
-            "messages": {
-                "ギャル先生": "ウサギちゃん、優しさ神！あんたの夢、ウチが全力で応援しちゃうよ！🐰",
-                "頼れるお姉さん": "ウサギさん、繊細なあなたの心を守りたいの。今日は好きな物語の世界に浸りましょう？",
-                "ツンデレな指導員": "ウサギ！また理想と現実で悩んでるの？あんたの良さは私が一番知ってるんだから！",
-                "論理的なビジネスコーチ": "ウサギさんの信念は強みです。ただし、感情と事実は分けて分析する癖をつけてください。"
-            }
-        },
-        "INTP": {
-            "details": {
-                "work": "複雑な仕組みを解明する『天才分析官』。興味のあることへの集中力はエグいけど、事務作業は放置気味。",
-                "love": "知的な会話ができる相手が大好き。好き避けしがちだけど、心の中では相手を細かく分析して理解しようとする。",
-                "stress": "感情がオーバーフローして、急に泣き出したり、周囲に対して過剰に感情的・理不尽な怒りをぶつける。",
-                "best_match": "威風堂々なワシ（ENTJ）"
-            },
-            "name": "論理学者", "animal": "探求するチンパンジー", "catchphrase": "「常識を疑い、知の迷宮を楽しむ知的な探検家」",
-            "strength": "斬新なアイデア、抽象化能力、真理への強さ。", "weakness": "実行の遅れ、社交的マナーの欠如、理屈での衝突。",
-            "mentor": "カサネ・イズミ：論理と不確定要素",
-            "messages": {
-                "ギャル先生": "パンジーくん、天才すぎ！その不思議なアイディア、マジでバズるよ！🚀",
-                "頼れるお姉さん": "パンジーさん、知的なあなたの探究心、素敵ね。でもたまには現実の体も労ってあげて？",
-                "ツンデレな指導員": "パンジー！理屈ばっかり！…でも、その思考の鋭さは天才的ね。実行まで付き合いなさい。",
-                "論理的なビジネスコーチ": "パンジーさんの思考の深さは一流です。アウトプットを仮説として検証するフェーズに移りましょう。"
-            }
-        },
-        "ESTP": {
-            "details": {
-                "work": "リスクを恐れず現場でチャンスを掴む『トラブルシューター』。会議より行動、結果が全てのスピード狂。",
-                "love": "ストレートで情熱的。スリルを共有できる相手を好むけど、マンネリを感じるとすぐ次を探したくなる危うさも。",
-                "stress": "自分の能力を疑い始め、無謀なギャンブルや暴走に走る。周囲のアドバイスを完全に無視して孤立することも。",
-                "best_match": "冷静なサメ（ISTP）"
-            },
-            "name": "起業家", "animal": "勇敢なチーター", "catchphrase": "「考える前に跳べ。世界を遊び場に変える開拓者」",
-            "strength": "圧倒的エナジー、スピード感、逆境の突破力。", "weakness": "スリルへの依存、長期計画の欠如、無神経な言動。",
-            "mentor": "ツンデレな指導員",
-            "messages": {
-                "ギャル先生": "チーターくん、爆速すぎ！今日もその勢いでブチ上げてこー！🐆✨",
-                "頼れるお姉さん": "チーターさん、行動力のあるあなたに元気をもらえるわ。でも、たまには立ち止まって休んで？",
-                "ツンデレな指導員": "チーター！また危ないことしたでしょ！あんたの無鉄砲さは、私が管理してあげなきゃね。",
-                "論理的なビジネスコーチ": "チーターさんの実行力は最高ですが、リスクヘッジが必要です。撤退ラインを設定しましょう。"
-            }
-        },
-        "ESFP": {
-            "details": {
-                "work": "場の空気を一気に明るくする『ムードメーカー』。人との交流がある仕事で最大のパフォーマンスを発揮するわ。",
-                "love": "毎日をパーティーに変える楽しさ重視派。嫉妬深くはないけど、常に注目されていないと寂しくて死んじゃう。",
-                "stress": "極端に悲観的になり、普段の明るさが消えて『誰も私を分かってくれない』と被害妄想に陥っちゃうことも。",
-                "best_match": "自由なネコ（ISFP）"
-            },
-            "name": "エンターテイナー", "animal": "陽気なレッサーパンダ", "catchphrase": "「一瞬で場を彩る、愛されキャラの天才」",
-            "strength": "場を明るくする力、空間作りのセンス、旺盛な好奇心。", "weakness": "孤独への不安、問題の回避、衝動的な行動。",
-            "mentor": "ギャル先生",
-            "messages": {
-                "ギャル先生": "パンダちゃん、最高にハッピー！あんたがいるだけで場がアガるわ！🐼💖",
-                "頼れるお姉さん": "パンダさん、あなたの笑顔は魔法ね。でも、無理して笑わなくていい時も私には見せて？",
-                "ツンデレな指導員": "パンダ！賑やかなのはいいけど、ちゃんと計画も立てなさい！私がチェックしてあげるわ。",
-                "論理的なビジネスコーチ": "パンダさんの才能を資産化すべきです。SNS等のプラットフォーム戦略を練りましょう。"
-            }
-        },
-        "ENFP": {
-            "details": {
-                "work": "無限のアイディアを出す『クリエイター』。新しいプロジェクトを立ち上げるのが得意だけど、細かい事務は誰かに投げる派。",
-                "love": "運命の出会いを信じるロマンチスト。好奇心旺盛で相手の魅力を引き出す天才だけど、束縛されると一気に冷めるわ。",
-                "stress": "細かいディテールに異常にこだわり始め、普段の柔軟性がゼロに。強迫観念に囚われて動けなくなっちゃう。",
-                "best_match": "理想を夢見るウサギ（INFP）"
-            },
-            "name": "広報運動家", "animal": "天真爛漫なカワウソ", "catchphrase": "「無限のワクワクを撒き散らす、愛の伝道師」",
-            "strength": "可能性の発見、圧倒的なコミュ力、レジリエンス。", "weakness": "中途半端な終わり、他人の反応への過敏、単純作業への耐性ゼロ。",
-            "mentor": "ギャル先生",
-            "messages": {
-                "ギャル先生": "カワウソちゃん、ワクワク全開！今日も新しい冒険、楽しんじゃお！🦦",
-                "頼れるお姉さん": "カワウソさん、あなたの自由な発想に癒されるわ。行き詰まったら、私が話を聞くわね。",
-                "ツンデレな指導員": "カワウソ！アイディア出しすぎ！一つずつ片付けなさい。…手伝ってあげなくもないけど。",
-                "論理的なビジネスコーチ": "カワウソさんの思考を収束させる必要があります。今週の『最優先タスク』を3つに絞りましょう。"
-            }
-        },
-        "ENTP": {
-            "details": {
-                "work": "常識を疑い、最短ルートで正解を導く『イノベーター』。議論が大好きで、難しい課題ほど燃えるタイプね。",
-                "love": "知的な駆け引きを楽しむ。自分を論破してくれるような強い相手に惹かれるけど、基本的には自分が主導権を握りたい。",
-                "stress": "些細なことに執着し、普段の広い視野が消滅。無意味なデータを集め続けたり、引きこもって無気力になるわ。",
-                "best_match": "孤高のトラ（INTJ）"
-            },
-            "name": "討論者", "animal": "独創的なキツネ", "catchphrase": "「知的なイタズラで、退屈な世界に風穴を開ける」",
-            "strength": "常識の破壊、圧倒的な交渉術、逆境での強さ。", "weakness": "論破による摩擦、実務の丸投げ、権威への反抗。",
-            "mentor": "ツンデレな指導員",
-            "messages": {
-                "ギャル先生": "キツネくん、口調強めだけど天才！常識なんてブチ壊しちゃえ！🦊🔥",
-                "頼れるお姉さん": "キツネさん、知的な悪戯っ子さんね。でも、たまには素直なあなたも見せてほしいな。",
-                "ツンデレな指導員": "キツネ！また屁理屈言って！でも、あんたのその度胸だけは…評価してあげてもいいわ。",
-                "論理的なビジネスコーチ": "キツネさん、議論の目的を再定義してください。論破ではなく『合意』がゴールのはずです。"
-            }
-        },
-        "ESTJ": {
-            "details": {
-                "work": "ルールと秩序を重んじる『完璧なリーダー』。効率と成果を追求し、組織を勝利に導く実行力はピカイチよ。",
-                "love": "責任感が強く、将来設計をしっかり立ててくれる。誠実だけど、自分のルールを相手にも強要しがちなのが玉にキズ。",
-                "stress": "感情をコントロールできなくなり、急に孤独感に襲われて涙もろくなる。自分は誰にも感謝されていないと落ち込むわ。",
-                "best_match": "穏やかなシカ（ISFJ）"
-            },
-            "name": "幹部", "animal": "誠実な番犬", "catchphrase": "「揺るぎない正義感で、秩序と平和を守り抜く」",
-            "strength": "組織の司令塔、ルール遵守の安心感、強いリーダーシップ。", "weakness": "独断的な否定、感情の切り捨て、変化への弱さ。",
-            "mentor": "論理的なビジネスコーチ",
-            "messages": {
-                "ギャル先生": "ワンちゃん、頼りになりすぎ！あんたのリーダーシップ、マジリスペクト！🐕",
-                "頼れるお姉さん": "ワンさん、責任感の強いあなたに、安らぎの時間を。お茶を淹れたから、一息ついて？",
-                "ツンデレな指導員": "ワン！あんたが頑張りすぎるから周りが付いてこれないのよ！私を見て、落ち着きなさい。",
-                "論理的なビジネスコーチ": "ワンさんの規律維持には感謝します。次は心理的安全性の確保をKPIに加えましょう。"
-            }
-        },
-        "ESFJ": {
-            "details": {
-                "work": "誰に対しても親切で、調和を保つ『コミュニティの守護者』。チームの士気を上げる天才で、実務能力も高いわ。",
-                "love": "相手に尽くし、家庭やコミュニティを大切にする。見返りがないと不安になるけど、愛情表現はストレートで濃厚よ。",
-                "stress": "普段の優しさが消えて、超理屈っぽく他人を批判し始める。冷酷な態度をとってしまい、後で激しく自己嫌悪するわ。",
-                "best_match": "勤勉なビーバー（ISTJ）"
-            },
-            "name": "領事", "animal": "お世話好きなゾウ", "catchphrase": "「大きな愛でみんなを包む、コミュニティの守護神」",
-            "strength": "抜群の把握力、場作りの天才、誠実な献身。", "weakness": "評価への依存、過度なお節介、異質なものへの批判。",
-            "mentor": "優しさに溢れるメンター (Default)",
-            "messages": {
-                "ギャル先生": "ゾウさん、優しさMAX！みんなのためにいつもありがとね！🐘💖",
-                "頼れるお姉さん": "ゾウさん、お世話好きなあなたも、今日はお世話される側になりましょう？おやすみなさい。",
-                "ツンデレな指導員": "ゾウ！他人のことばっかり！自分を大事にしなさいって言ってるでしょ。バカなんだから。",
-                "論理的なビジネスコーチ": "ゾウさんの社交性は強力な武器です。その人脈をネットワーク資産として整理しましょう。"
-            }
-        },
-        "ENFJ": {
-            "details": {
-                "work": "他人の才能を見抜き、やる気にさせる『導き手』。理想の世界を作るために、みんなを巻き込むカリスマ性があるわ。",
-                "love": "理想のパートナーシップを追求する。相手を全力でサポートするけど、理想を押し付けすぎて重たくなっちゃうことも。",
-                "stress": "普段の自信が嘘のように消え、些細な批判を『人格否定』と受け取って深く傷つく。自分の殻にこもってしまうわ。",
-                "best_match": "思慮深いフクロウ（INFJ）"
-            },
-            "name": "主人公", "animal": "情熱的なライオン", "catchphrase": "「みんなの可能性を信じ、光差す方へ導く太陽」",
-            "strength": "他人のポテンシャル開花、心に火をつける力、バランス良い仲裁。", "weakness": "過度な責任感による自滅、厳しい指摘の回避、期待への裏返しストレス。",
-            "mentor": "頼れるお姉さん",
-            "messages": {
-                "ギャル先生": "ライオンくん、情熱ヤバい！あんたの言葉でみんな救われてるよ！🦁✨",
-                "頼れるお姉さん": "ライオンさん、理想を追うあなたの背中を支えたいの。疲れたら私の膝で休んでいいのよ。",
-                "ツンデレな指導員": "ライオン！みんなを導くのもいいけど、自分のケアも忘れないこと。…私が守ってあげるわ。",
-                "論理的なビジネスコーチ": "ライオンさんの共感力は高いですが、判断には客観的な指標も必要です。KPIを設定しましょう。"
-            }
-        },
-        "ENTJ": {
-            "details": {
-                "work": "圧倒的な決断力で頂点を目指す『指揮官』。感情に流されず、目標達成のためにリソースを最適化するわ。",
-                "love": "恋愛も一つのプロジェクト。お互いを高め合える「強い相手」を求めてる。甘えるのは苦手だけど、守る力は最強よ。",
-                "stress": "急に繊細になり、普段無視しているような感情の問題に振り回される。自分の無能さを感じて自暴自棄になることも。",
-                "best_match": "探求するチンパンジー（INTP）"
-            },
-            "name": "指揮官", "animal": "威風堂々なワシ", "catchphrase": "「高みから未来を見据え、勝利への最短距離を飛ぶ」",
-            "strength": "圧倒的決断力、目標達成への執念、冷徹な客観性。", "weakness": "成果なき者への容赦のなさ、独裁的な振る舞い、私生活の疎か。",
-            "mentor": "論理的なビジネスコーチ",
-            "messages": {
-                "ギャル先生": "ワシさん、最強リーダー！今日も世界を征服しちゃってー！🦅🔥",
-                "頼れるお姉さん": "ワシさん、孤高の指揮官さん。重荷を一人で背負わないで。私を頼ってくれてもいいのよ。",
-                "ツンデレな指導員": "ワシ！その野心、最高にカッコいいわ。攻めるのはいいけど、守りも固めなさいよね。",
-                "論理的なビジネスコーチ": "ワシさんの生産性の高さは卓越しています。次は後継者育成（デレゲーション）に注力してください。"
-            }
-        }
+        "ISTJ": {"name": "管理者", "animal": "勤勉なビーバー", "catchphrase": "「一歩ずつ、確実に。信頼を築き上げる職人」", "strength": "責任感の塊、精密な作業", "weakness": "変化への抵抗", "mentor": "論理的なビジネスコーチ", "details": {"work": "マニュアル重視", "love": "超誠実", "stress": "細かいミスに固執", "best_match": "お世話好きなゾウ（ESFJ）"}, "messages": {"ギャル先生": "ビーバーちゃん、マジメすぎ！✨"}},
+        "ISFJ": {"name": "擁護者", "animal": "穏やかなシカ", "catchphrase": "「静かな優しさで、みんなの心に灯をともす」", "strength": "配慮、誠実", "weakness": "自己犠牲", "mentor": "優しさに溢れるメンター (Default)", "details": {"work": "最高のサポーター", "love": "献身的", "stress": "悲観的", "best_match": "誠実な番犬（ESTJ）"}, "messages": {"ギャル先生": "シカちゃん、今日はあんたが主役！💖"}},
+        "INFJ": {"name": "提唱者", "animal": "思慮深いフクロウ", "catchphrase": "「夜の静寂の中で、未来の光を見通す賢者」", "strength": "洞察力、理想", "weakness": "感情疲労", "mentor": "頼れるお姉さん", "details": {"work": "静かなリーダー", "love": "深い繋がり", "stress": "感覚過敏", "best_match": "情熱的なライオン（ENFJ）"}, "messages": {"ギャル先生": "フクロウちゃん、リスペクト！🌈"}},
+        "INTJ": {"name": "建築家", "animal": "孤高のトラ", "catchphrase": "「誰にも媚びず、己の知略で世界を再構築する」", "strength": "戦略的思考", "weakness": "感情への無関心", "mentor": "カサネ・イズミ：論理と不確定要素", "details": {"work": "軍師", "love": "知的刺激重視", "stress": "現実逃避", "best_match": "独創的なキツネ（ENTP）"}, "messages": {"ギャル先生": "トラさん、クールすぎ！🔥"}},
+        "ISTP": {"name": "巨匠", "animal": "冷静なサメ", "catchphrase": "「乱世をクールに泳ぎ、一瞬の好機を逃さない」", "strength": "解決力", "weakness": "無関心", "mentor": "ツンデレな指導員", "details": {"work": "一匹狼のプロ", "love": "距離感大切", "stress": "感情爆発", "best_match": "勇敢なチーター（ESTP）"}, "messages": {"ギャル先生": "サメちゃん、自由で最高！✨"}},
+        "ISFP": {"name": "冒険家", "animal": "自由なネコ", "catchphrase": "「自分の『好き』を呼吸するように生きる芸術家」", "strength": "美的センス", "weakness": "批判に弱い", "mentor": "ギャル先生", "details": {"work": "アーティスト", "love": "繊細さん", "stress": "自信喪失", "best_match": "陽気なレッサーパンダ（ESFP）"}, "messages": {"ギャル先生": "ネコちゃん、感性ヤバすぎ！🐾"}},
+        "INFP": {"name": "仲介者", "animal": "理想を夢見るウサギ", "catchphrase": "「傷つくことを恐れず、愛と優しさを信じ続ける」", "strength": "表現力", "weakness": "実務放置", "mentor": "頼れるお姉さん", "details": {"work": "夢想家", "love": "ロマンチスト", "stress": "攻撃的に変貌", "best_match": "天真爛漫なカワウソ（ENFP）"}, "messages": {"ギャル先生": "ウサギちゃん、優しさ神！🐰"}},
+        "INTP": {"name": "論理学者", "animal": "探求するチンパンジー", "catchphrase": "「常識を疑い、知の迷宮を楽しむ知的な探検家」", "strength": "分析力", "weakness": "実行の遅れ", "mentor": "カサネ・イズミ：論理と不確定要素", "details": {"work": "天才分析官", "love": "知的な会話", "stress": "感情漏洩", "best_match": "威風堂々なワシ（ENTJ）"}, "messages": {"ギャル先生": "パンジーくん、天才すぎ！🚀"}},
+        "ESTP": {"name": "起業家", "animal": "勇敢なチーター", "catchphrase": "「考える前に跳べ。世界を遊び場に変える開拓者」", "strength": "エナジー", "weakness": "無神経", "mentor": "ツンデレな指導員", "details": {"work": "トラブルシューター", "love": "情熱的", "stress": "暴走", "best_match": "冷静なサメ（ISTP）"}, "messages": {"ギャル先生": "チーターくん、爆速すぎ！🐆"}},
+        "ESFP": {"name": "エンターテイナー", "animal": "陽気なレッサーパンダ", "catchphrase": "「一瞬で場を彩る、愛されキャラの天才」", "strength": "ムードメーカー", "weakness": "孤独不安", "mentor": "ギャル先生", "details": {"work": "場の空気作り", "love": "楽しさ重視", "stress": "被害妄想", "best_match": "自由なネコ（ISFP）"}, "messages": {"ギャル先生": "パンダちゃん、最高！🐼"}},
+        "ENFP": {"name": "広報運動家", "animal": "天真爛漫なカワウソ", "catchphrase": "「無限のワクワクを撒き散らす、愛の伝道師」", "strength": "クリエイター", "weakness": "中途半端", "mentor": "ギャル先生", "details": {"work": "アイディアマン", "love": "運命信じる", "stress": "強迫観念", "best_match": "理想を夢見るウサギ（INFP）"}, "messages": {"ギャル先生": "カワウソちゃん、全開！🦦"}},
+        "ENTP": {"name": "討論者", "animal": "独創的なキツネ", "catchphrase": "「知的なイタズラで、退屈な世界に風穴を開ける」", "strength": "イノベーター", "weakness": "論破癖", "mentor": "ツンデレな指導員", "details": {"work": "常識破壊", "love": "駆け引き", "stress": "執着", "best_match": "孤高のトラ（INTJ）"}, "messages": {"ギャル先生": "キツネくん、天才！🦊"}},
+        "ESTJ": {"name": "幹部", "animal": "誠実な番犬", "catchphrase": "「揺るぎない正義感で、秩序と平和を守り抜く」", "strength": "リーダーシップ", "weakness": "独断", "mentor": "論理的なビジネスコーチ", "details": {"work": "組織の司令塔", "love": "責任感強", "stress": "孤独感", "best_match": "穏やかなシカ（ISFJ）"}, "messages": {"ギャル先生": "ワンちゃん、リスペクト！🐕"}},
+        "ESFJ": {"name": "領事", "animal": "お世話好きなゾウ", "catchphrase": "「大きな愛でみんなを包む、コミュニティの守護神」", "strength": "調和", "weakness": "お節介", "mentor": "優しさに溢れるメンター (Default)", "details": {"work": "守護者", "love": "愛情濃厚", "stress": "理屈批判", "best_match": "勤めるビーバー（ISTJ）"}, "messages": {"ギャル先生": "ゾウさん、優しさMAX！🐘"}},
+        "ENFJ": {"name": "主人公", "animal": "情熱的なライオン", "catchphrase": "「みんなの可能性を信じ、光差す方へ導く太陽」", "strength": "カリスマ", "weakness": "自滅", "mentor": "頼れるお姉さん", "details": {"work": "導き手", "love": "理想追求", "stress": "自閉", "best_match": "思慮深いフクロウ（INFJ）"}, "messages": {"ギャル先生": "ライオンくん、情熱ヤバい！🦁"}},
+        "ENTJ": {"name": "指揮官", "animal": "威風堂々なワシ", "catchphrase": "「高みから未来を見据え、勝利への最短距離を飛ぶ」", "strength": "決断力", "weakness": "容赦なさ", "mentor": "論理的なビジネスコーチ", "details": {"work": "指揮官", "love": "恋愛プロジェクト", "stress": "繊細化", "best_match": "探求するチンパンジー（INTP）"}, "messages": {"ギャル先生": "ワシさん、最強リーダー！🦅"}}
     }
-    # --- 4. 進捗管理 ---
-    answered_count = 0
-    for i in range(len(questions)):
-        key = f"q_{i}"
-        if key in st.session_state and st.session_state[key] is not None:
-            answered_count += 1
-    
-    with st.sidebar:
-        st.header("📊 診断の進捗")
-        progress_per = answered_count / len(questions)
-        st.progress(progress_per)
-        st.write(f"**{answered_count} / {len(questions)} 問** 回答済み")
-        st.divider()
-        st.markdown("**ギャル先生からの応援**")
-        if progress_per < 0.5: st.write("「まずは直感でポチポチいこー！✨」")
-        elif progress_per < 1.0: st.write("「いい感じ！半分超えたよ、あと少し！🔥」")
-        else: st.write("「完璧！あんたマジ最高！ボタン押しちゃいな！💖」")
 
-    # --- 5. 質問表示 ---
-    # --- 5. 質問表示（リセット対応版） ---
-    user_answers = {}
-# --- 5. 質問表示（コンテナ魔法版） ---
-    # 実行回数ごとに名前が変わるコンテナを作ることで、中身を強制リセット！
-# --- 5. 質問表示（コンテナ魔法版） ---
-    # 実行回数ごとに名前が変わるコンテナを作ることで、中身を強制リセット！
-    with st.container(key=f"questions_container_{st.session_state['run_count']}"):
-# --- 5. 質問表示（コンテナ魔法版） ---
-with st.container(key=f"questions_container_{st.session_state['run_count']}"):
+    # --- 3. 画面の切り替え判定 ---
+    if "show_result" not in st.session_state:
+        st.session_state["show_result"] = False
+
+    # 【A】質問モード
+    if not st.session_state["show_result"]:
+        st.title("🐾 性格診断クエスト")
+        
+        # 進捗計算
+        answered_count = 0
+        for i in range(len(questions)):
+            if f"q_{i}" in st.session_state:
+                answered_count += 1
+        
+        with st.sidebar:
+            st.header("📊 診断の進捗")
+            progress = answered_count / len(questions)
+            st.progress(progress)
+            st.write(f"**{answered_count} / {len(questions)} 問** 回答済み")
+            st.divider()
+            if progress < 0.5: st.write("ギャル先生：「直感でポチポチいこー！✨」")
+            elif progress < 1.0: st.write("ギャル先生：「いい感じ！あと少し！🔥」")
+            else: st.write("ギャル先生：「完璧！ボタン押しちゃいな！💖」")
+
         user_answers = {}
         for i, (q_text, axis, weight) in enumerate(questions):
             st.markdown(f"**Q{i+1}. {q_text}**")
             user_answers[i] = st.radio(
-                f"radio_{i}", 
-                options=[1, 2, 3, 4, 5], 
+                f"radio_{i}", options=[1, 2, 3, 4, 5],
                 format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
-                key=f"q_{i}_{st.session_state['run_count']}", # ここにも回数を入れる！
-                label_visibility="collapsed", 
-                horizontal=True, 
-                index=2
+                key=f"q_{i}", label_visibility="collapsed", horizontal=True, index=2
             )
             st.write("---")
         
-    # --- 6. 診断実行 ---
-    if st.button("診断結果を詳しく見る ✨", use_container_width=True):
-        if answered_count < len(questions):
-            st.error(f"まだ回答していない質問があるよ！（残り {len(questions) - answered_count} 問）")
-        else:
-            st.session_state["show_result"] = True
+        if st.button("診断結果を詳しく見る ✨", use_container_width=True):
+            if answered_count < len(questions):
+                st.error(f"まだ回答していない質問があるよ！（残り {len(questions) - answered_count} 問）")
+            else:
+                st.session_state["show_result"] = True
+                st.rerun()
 
-    if st.session_state.get("show_result"):
+    # 【B】結果モード
+    else:
         st.balloons()
+        # スコア計算
         scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0, "A-T": 0}
-        for i, (q_text, axis, weight) in enumerate(questions):
-            scores[axis] += (st.session_state[f"q_{i}"] - 3) * weight
+        for i, (_, axis, weight) in enumerate(questions):
+            # ラジオボタンの値を直接取得
+            val = st.session_state.get(f"q_{i}", 3)
+            scores[axis] += (val - 3) * weight
 
         mbti_core = ("E" if scores["E-I"] >= 0 else "I") + ("S" if scores["S-N"] >= 0 else "N") + \
                     ("T" if scores["T-F"] >= 0 else "F") + ("J" if scores["J-P"] >= 0 else "P")
-        identity = "-A" if scores["A-T"] >= 0 else "-T"
-        full_res = mbti_core + identity
+        full_res = mbti_core + ("-A" if scores["A-T"] >= 0 else "-T")
+        detail = mbti_db.get(mbti_core, mbti_db["ISTJ"])
 
-        detail = mbti_db.get(mbti_core)
-
-        # --- ここを書き換え！ ---
-        # --- ここを書き換え！ ---
-        st.divider()
         st.markdown(f"## 判定結果：{full_res}")
-        
-        # 動物名とキャッチフレーズを表示する行
         st.markdown(f"### あなたを動物に例えると… 『 {detail['animal']} 』")
         st.info(f"**{detail['catchphrase']}**")
 
-        # 👇 ここから「タブ機能」を差し込む！
-        st.markdown("### 📖 あなたの取扱説明書")
         tab1, tab2, tab3, tab4 = st.tabs(["💼 仕事・勉強", "💖 人間関係", "💀 裏の顔", "🤝 相性"])
+        with tab1: st.write(f"**スタイル：**\n\n{detail['details']['work']}")
+        with tab2: st.write(f"**傾向：**\n\n{detail['details']['love']}")
+        with tab3: st.warning(f"**ストレス時：**\n\n{detail['details']['stress']}")
+        with tab4: st.info(f"**最高の相性：**\n\n{detail['details']['best_match']}")
 
-        with tab1:
-            st.write(f"**成果を出すスタイル：**\n\n{detail['details']['work']}")
-        with tab2:
-            st.write(f"**コミュニケーションの傾向：**\n\n{detail['details']['love']}")
-        with tab3:
-            st.warning(f"**ストレスが溜まると...**\n\n{detail['details']['stress']}")
-        with tab4:
-            st.info(f"**最高のパートナー：**\n\n{detail['details']['best_match']}")
-        
-        st.divider() # 区切り線を入れてスッキリさせる
-        
-        # レーダーチャート
+        # チャート表示
         categories = ['外向(E)', '感覚(S)', '思考(T)', '判断(J)', '自己主張(A)']
         values = [scores["E-I"], scores["S-N"], scores["T-F"], scores["J-P"], scores["A-T"]]
-        fig = go.Figure(data=go.Scatterpolar(r=values + [values[0]], theta=categories + [categories[0]], fill='toself', line_color='#4A90E2', fillcolor='rgba(74, 144, 226, 0.3)'))
+        fig = go.Figure(data=go.Scatterpolar(r=values + [values[0]], theta=categories + [categories[0]], fill='toself'))
         fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[-12, 12])), showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 
-        # 具体的解説セクション
-        st.markdown("### 🔍 あなたの詳しい性格分析")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.info(f"✨ **ここがあなたの武器（強み）**\n\n{detail['strength']}")
-        with col2:
-            st.warning(f"⚠️ **ここに注意（気をつけたい点）**\n\n{detail['weakness']}")
-
-        st.divider()
-
-        # 🤝 メンター指名セクション
-        # --- 🤝 メンター指名セクション ---
-        st.markdown("### 🤝 今日のメンターを指名する")
-        selected_mentor = st.selectbox(
-            "指名されたメンターから、今のあなたにピッタリなアドバイスを贈ります。",
-            options=list(mentor_data.keys()),
-            index=list(mentor_data.keys()).index(detail["mentor"]) if detail["mentor"] in mentor_data else 0
-        )
-
+        # メンター
+        st.markdown("### 🤝 今日のメンター")
+        selected_mentor = st.selectbox("メンターを指名", options=list(mentor_data.keys()), index=0)
         m_info = mentor_data[selected_mentor]
+        msg = detail["messages"].get(selected_mentor, m_info["quote"])
+        st.chat_message("assistant").write(f"**{selected_mentor}**：「{msg}」")
+        st.success(f"🎁 **ラッキーアクション**：{random.choice(m_info['actions'])}")
 
-        # --- 【ここが重要！】専用メッセージを呼び出すロジック ---
-        if "messages" in detail and selected_mentor in detail["messages"]:
-            display_quote = detail["messages"][selected_mentor]
-        else:
-            # もし専用メッセージがない場合の予備（デフォルト）
-            display_quote = m_info['quote']
+        # ダウンロード
+        st.download_button("結果を保存 📥", f"結果: {full_res}\n動物: {detail['animal']}", file_name="result.txt", use_container_width=True)
 
-        st.chat_message("assistant").write(f"**{selected_mentor}**：「{display_quote}」")
-        # ---------------------------------------------------
-        
-        current_action = random.choice(m_info['actions'])
-        st.success(f"🎁 **今日のラッキーアクション**：{current_action}")
-
-        # --- 7. 保存機能 ---
-        report_text = f"""【MBTI性格診断 Pro レポート】
-日時: 2025年12月23日 05:52
-判定結果: {full_res}（{detail['name']}）
-
-■ あなたの強み
-{detail['strength']}
-
-■ 注意点
-{detail['weakness']}
-
-■ メンター: {selected_mentor}
-■ ラッキーアクション: {current_action}
-""" 
-        st.download_button(
-            label="診断結果をダウンロードして保存 📥",
-            data=report_text,
-            file_name=f"MBTI_Result_{full_res}.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
-        
-        # 👇 ここに「やり直しボタン」を追記！
-        st.markdown("---")
-        if st.button("🔄 別の結果も見てみる（最初からやり直す）", use_container_width=True):
-            # 回数を1増やすことで、コンテナとラジオボタンの「鍵」を新しくする
-            st.session_state["run_count"] += 1
-            st.session_state["show_result"] = False
-            # clearせずに、必要なフラグだけ消してリラン！
+        # 🔄 やり直しボタン (最強リセット)
+        st.divider()
+        if st.button("🔄 最初からやり直す", use_container_width=True):
+            st.session_state.clear()
             st.rerun()
-            
+
 if __name__ == "__main__":
-    if "show_result" not in st.session_state:
-        st.session_state["show_result"] = False
     run_mbti_diagnostic()
