@@ -244,7 +244,7 @@ def run_mbti_diagnostic():
 
         detail = mbti_db.get(mbti_core)
 
-       # --- ここを書き換え！ ---
+        # --- ここを書き換え！ ---
         st.divider()
         st.markdown(f"## 判定結果：{full_res}")
         
