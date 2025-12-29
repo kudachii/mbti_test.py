@@ -318,15 +318,25 @@ def run_mbti_diagnostic():
         st.divider()
 
         # 🤝 メンター指名セクション
+        # --- 🤝 メンター指名セクション ---
         st.markdown("### 🤝 今日のメンターを指名する")
         selected_mentor = st.selectbox(
             "指名されたメンターから、今のあなたにピッタリなアドバイスを贈ります。",
             options=list(mentor_data.keys()),
-            index=list(mentor_data.keys()).index(detail["mentor"]) if detail["mentor"] in mentor_data else 5
+            index=list(mentor_data.keys()).index(detail["mentor"]) if detail["mentor"] in mentor_data else 0
         )
 
         m_info = mentor_data[selected_mentor]
-        st.chat_message("assistant").write(f"**{selected_mentor}**：「{m_info['quote']}」")
+
+        # --- 【ここが重要！】専用メッセージを呼び出すロジック ---
+        if "messages" in detail and selected_mentor in detail["messages"]:
+            display_quote = detail["messages"][selected_mentor]
+        else:
+            # もし専用メッセージがない場合の予備（デフォルト）
+            display_quote = m_info['quote']
+
+        st.chat_message("assistant").write(f"**{selected_mentor}**：「{display_quote}」")
+        # ---------------------------------------------------
         
         current_action = random.choice(m_info['actions'])
         st.success(f"🎁 **今日のラッキーアクション**：{current_action}")
