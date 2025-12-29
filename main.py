@@ -331,10 +331,12 @@ def run_mbti_diagnostic():
 
         st.markdown("### 🤝 今日のメンターを指名")
         selected_mentor = st.selectbox("指名する", options=list(mentor_data.keys()), index=0)
-        m_info = mentor_data[selected_mentor]
-        msg = detail["messages"].get(selected_mentor, m_info["quote"])
+        
+        # ★ ここがポイント！DBから選ばれたメンターのセリフを直接取得 ★
+        msg = detail["messages"].get(selected_mentor, "こんにちは、応援していますよ！")
+        
         st.chat_message("assistant").write(f"**{selected_mentor}**：「{msg}」")
-        st.success(f"🎁 **今日のラッキーアクション**：{random.choice(m_info['actions'])}")
+        st.success(f"🎁 **今日のラッキーアクション**：{random.choice(mentor_data[selected_mentor]['actions'])}")
 
         if st.button("🔄 最初からやり直す", use_container_width=True):
             st.session_state.clear()
