@@ -385,6 +385,12 @@ def run_mbti_diagnostic():
 動物タイプ: {detail['animal']}
 キャッチフレーズ: {detail['catchphrase']}
 
+■強み
+{detail['strengths']}
+
+■弱み
+{detail['weaknesses']}
+
 ■仕事・スタンス
 {detail['details']['work']}
 
