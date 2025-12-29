@@ -244,8 +244,13 @@ def run_mbti_diagnostic():
 
         detail = mbti_db.get(mbti_core)
 
+       # --- ここを書き換え！ ---
         st.divider()
-        st.markdown(f"## 判定結果：{full_res}（{detail['name']}）")
+        st.markdown(f"## 判定結果：{full_res}")
+        
+        # 動物名とキャッチフレーズを表示する行を追加！
+        st.markdown(f"### あなたを動物に例えると… 『 {detail['animal']} 』")
+        st.info(f"**{detail['catchphrase']}**")
 
         # レーダーチャート
         categories = ['外向(E)', '感覚(S)', '思考(T)', '判断(J)', '自己主張(A)']
