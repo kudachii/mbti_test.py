@@ -388,13 +388,29 @@ def run_mbti_diagnostic():
         detail = mbti_db.get(mbti_core)
 
         # --- ここを書き換え！ ---
+        # --- ここを書き換え！ ---
         st.divider()
         st.markdown(f"## 判定結果：{full_res}")
         
-        # 動物名とキャッチフレーズを表示する行を追加！
+        # 動物名とキャッチフレーズを表示する行
         st.markdown(f"### あなたを動物に例えると… 『 {detail['animal']} 』")
         st.info(f"**{detail['catchphrase']}**")
 
+        # 👇 ここから「タブ機能」を差し込む！
+        st.markdown("### 📖 あなたの取扱説明書")
+        tab1, tab2, tab3, tab4 = st.tabs(["💼 仕事・勉強", "💖 人間関係", "💀 裏の顔", "🤝 相性"])
+
+        with tab1:
+            st.write(f"**成果を出すスタイル：**\n\n{detail['details']['work']}")
+        with tab2:
+            st.write(f"**コミュニケーションの傾向：**\n\n{detail['details']['love']}")
+        with tab3:
+            st.warning(f"**ストレスが溜まると...**\n\n{detail['details']['stress']}")
+        with tab4:
+            st.info(f"**最高のパートナー：**\n\n{detail['details']['best_match']}")
+        
+        st.divider() # 区切り線を入れてスッキリさせる
+        
         # レーダーチャート
         categories = ['外向(E)', '感覚(S)', '思考(T)', '判断(J)', '自己主張(A)']
         values = [scores["E-I"], scores["S-N"], scores["T-F"], scores["J-P"], scores["A-T"]]
