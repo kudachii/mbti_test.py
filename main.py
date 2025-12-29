@@ -496,9 +496,12 @@ with st.container(key=f"questions_container_{st.session_state['run_count']}"):
         # 👇 ここに「やり直しボタン」を追記！
         st.markdown("---")
         if st.button("🔄 別の結果も見てみる（最初からやり直す）", use_container_width=True):
-            st.session_state.clear()  # 記憶を全部消す！
-            st.rerun()                # 最初から読み直す！
-
+            # 回数を1増やすことで、コンテナとラジオボタンの「鍵」を新しくする
+            st.session_state["run_count"] += 1
+            st.session_state["show_result"] = False
+            # clearせずに、必要なフラグだけ消してリラン！
+            st.rerun()
+            
 if __name__ == "__main__":
     if "show_result" not in st.session_state:
         st.session_state["show_result"] = False
