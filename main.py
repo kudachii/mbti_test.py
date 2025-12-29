@@ -338,6 +338,39 @@ def run_mbti_diagnostic():
         st.chat_message("assistant").write(f"**{selected_mentor}**：「{msg}」")
         st.success(f"🎁 **今日のラッキーアクション**：{random.choice(mentor_data[selected_mentor]['actions'])}")
 
+        # --- 診断結果のテキスト生成 ---
+        report_text = f"""【MBTI性格診断クエスト 結果レポート】
+実施日時: 2025-12-29
+判定タイプ: {full_res}
+動物タイプ: {detail['animal']}
+キャッチフレーズ: {detail['catchphrase']}
+
+■仕事・スタンス
+{detail['details']['work']}
+
+■対人関係・愛
+{detail['details']['love']}
+
+■ストレス時の傾向
+{detail['details']['stress']}
+
+■最高の相性
+{detail['details']['best_match']}
+
+■今日のメンター（{selected_mentor}）からのメッセージ
+「{msg}」
+------------------------------------------
+"""
+        
+        # 保存ボタンの設置
+        st.download_button(
+            label="📋 診断結果をテキストで保存する",
+            data=report_text,
+            file_name=f"MBTI_Result_{full_res}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+
         if st.button("🔄 最初からやり直す", use_container_width=True):
             st.session_state.clear()
             st.rerun()
