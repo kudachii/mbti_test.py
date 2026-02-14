@@ -87,7 +87,7 @@ def run_perfect_diagnostic():
         for i, (q_text, axis, _) in enumerate(questions):
             st.markdown(f"**Q{i+1}. {q_text}**")
             st.radio(f"radio_{i}", options=[1, 2, 3, 4, 5],
-                    format_func=lambda x: {1: "不一致", 2: "やや不一致", 3: "中立", 4: "やや一致", 5: "一致"}[x],
+                    format_func=lambda x: {1: "当てはまらない", 2: "やや当てはまる", 3: "中立", 4: "ややあっている", 5: "あっている"}[x],
                     key=f"q_{i}", label_visibility="collapsed", horizontal=True, index=None)
             st.write("---")
 
