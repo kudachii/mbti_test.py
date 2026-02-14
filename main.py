@@ -1,164 +1,110 @@
 import streamlit as st
 import plotly.graph_objects as go
-import random
 
-def run_mbti_diagnostic():
-    # --- 1. 質問データ (合計30問) ---
-    # MBTI 24問 + ラブタイプ(L) 6問
+def run_integrated_diagnostic():
+    # --- 1. 質問データ (30問) ---
+    # ※前回の30問ロジックを維持
     questions = [
-        ("多人数で集まるイベントに参加すると元気が出る", "E-I", 1),
-        ("自分の考えを整理するときは、誰かに話すより一人で考えたい", "E-I", -1),
-        ("知らない人にも自分から話しかけるのは苦ではない", "E-I", 1),
-        ("活動的な一日の後は、一人で静かに過ごす時間が必要だ", "E-I", -1),
-        ("新しいアイデアより、すでに証明されているやり方を信頼する", "S-N", 1),
-        ("空想より、現実的な問題解決に興味がある", "S-N", 1),
-        ("物事の裏に隠された「意味」について考えるのが好きだ", "S-N", -1),
-        ("詳細データより、インスピレーションを信じることが多い", "S-N", -1),
-        ("決断を下す際、論理や効率を最も重視する", "T-F", 1),
-        ("悩みを聞くとき、解決策を提示するよりまず気持ちに寄り添いたい", "T-F", -1),
-        ("正論でも、誰かを傷つける可能性があるなら言葉を選ぶべきだ", "T-F", -1),
-        ("誰かが間違っていたら、場の空気を壊してでも訂正すべきだと思う", "T-F", 1),
-        ("やるべきことはリスト化して、一つずつ消していくのが好きだ", "J-P", 1),
-        ("旅行に行くときは、予定を細かく決めずに動きたい", "J-P", -1),
-        ("仕事や勉強は、締め切りギリギリにならないと本気が出ない", "J-P", -1),
-        ("決まったルールやルーティンを守ることに安心感を覚える", "J-P", 1),
-        ("注目を浴びる立場になることは、どちらかといえば好きだ", "E-I", 1),
-        ("マニュアルがある場合、それを忠実に守る方だ", "S-N", 1),
-        ("人から「共感力が高い」と言われるより「頭が良い」と言われたい", "T-F", 1),
-        ("予期せぬトラブルにも臨機応変に対応することを楽しめる", "J-P", -1),
-        ("ストレスを感じる状況でも、比較的冷静でいられる", "A-T", 1),
-        ("過去の失敗をいつまでも悔やんでしまうことがある", "A-T", -1),
-        ("自分の能力や決断に自信を持っている", "A-T", 1),
-        ("他人の目が気になり、自分を過小評価してしまうことがある", "A-T", -1),
-        # --- ラブタイプ質問 (女王セレスティアの判別用) ---
-        ("恋人には自分の全てを知っていてほしいし、相手の全てを把握したい", "L", 2), # 裏：支配・情熱
-        ("パートナーとの間でも、礼儀や気高さは保つべきだと思う", "L", -1),        # 表：高貴・プライド
-        ("愛する人のためなら、自分を犠牲にして尽くすことに喜びを感じる", "L", 5), # 真：慈愛
-        ("束縛されるくらいなら、一人でいる方が自由でマシだ", "L", -2),          # 表（自律寄り）
-        ("恋人が自分を蔑ろにしたら、相応の報い（言葉や態度）を与えるべきだ", "L", 2), # 裏：罵声・鞭
-        ("最後はどんな過ちも、深い愛で包み込み許したいと思う", "L", 5)           # 真：人格者
+        ("初対面の人が多い場所でも、自分から進んで会話を楽しむ", "E-I", 1),
+        ("週末は外に出かけるよりも、家でゆっくり一人で過ごす方が回復する", "E-I", -1),
+        ("グループの中心で注目を浴びることに抵抗がない", "E-I", 1),
+        ("考えをまとめる時は、話しながらよりも書き出しながらの方が捗る", "E-I", -1),
+        ("抽象的な概念よりも、目に見える具体的な事実を重視する", "S-N", 1),
+        ("想像力を働かせるよりも、現実的なデータに基づいて判断したい", "S-N", 1),
+        ("物事の「なぜ」よりも「どのように機能するか」に興味がある", "S-N", 1),
+        ("直感やインスピレーションを信じて行動することが多い", "S-N", -1),
+        ("議論では感情に流されず、論理的に正しいかどうかを優先する", "T-F", 1),
+        ("人の悩みを聞く時は、アドバイスよりもまず共感することを心がけている", "T-F", -1),
+        ("客観的な真実よりも、人間関係の調和を守ることの方が大切だと思う", "T-F", -1),
+        ("効率が悪くても、全員が納得するまで話し合うべきだ", "T-F", -1),
+        ("締め切りや予定は厳守し、計画通りに進むと安心する", "J-P", 1),
+        ("その場の状況に合わせて柔軟に予定を変える方が好きだ", "J-P", -1),
+        ("整理整頓が得意で、身の回りは常に整っている方だ", "J-P", 1),
+        ("ギリギリまで選択肢を残しておきたいタイプだ", "J-P", -1),
+        ("人からどう見られているか、あまり気にならない", "A-T", 1),
+        ("失敗すると長く落ち込みやすく、自分を責めてしまう", "A-T", -1),
+        ("自分自身の能力に自信を持っており、将来を楽観視している", "A-T", 1),
+        ("周囲の環境変化に対して、敏感にストレスを感じやすい", "A-T", -1),
+        ("マニュアルよりも自分の経験を信じる", "S-N", 1),
+        ("感情を表に出すのは苦手な方だ", "T-F", 1),
+        ("予期せぬトラブルには臨機応変に対応するのが得意だ", "J-P", -1),
+        ("一人でいると寂しさを感じ、誰かと繋がっていたい", "E-I", 1),
+        # --- 恋愛診断 6問 ---
+        ("恋人の行動は、細かく把握しておきたい", "Love", 2),
+        ("親しい間柄でも、礼儀や一定の距離感は必要だ", "Love", -1),
+        ("相手の幸せが自分の幸せであり、何でもしてあげたい", "Love", 5),
+        ("愛する人には、時には厳しい態度で接するのが愛だ", "Love", 1),
+        ("恋人とは、精神的な深い部分で一体化したい", "Love", 3),
+        ("恋愛において自分のプライドを傷つけられることは許せない", "Love", -1)
     ]
 
-    # --- 2. メンターデータ ---
-    mentor_data = {
-        "女王セレスティア": {
-            "quote": "「私の前に跪きなさい。あなたの魂の形、私が直々に審判を下してあげるわ。」",
-            "actions": ["「高貴な一服を楽しみなさい。安物は許さないわよ。」", "「私への献上金（寄付）の準備はできていて？誰かのためになる行為こそが真の気高さよ。」", "「今日は自分を律しなさい。堕落は私の前では罪よ。」"]
-        },
-        "ギャル先生": {
-            "quote": "「おはよー！あんたの魅力、マジでバズり確定じゃん！✨ その調子で今日もハピネスに、自分軸でブチ上げてこー！💖」",
-            "actions": ["「コンビニの新作スイーツ買って自分にご褒美あげちゃお！✨」", "「鏡の前で『今日も可愛いじゃん』って言ってみて？💖」", "「派手な色の小物を1つ身につけてみて！🌈」"]
-        },
-        "頼れるお姉さん": { "quote": "「一生懸命なところ、素敵よ。でもたまには甘えていいのよ？」", "actions": ["「5分だけデジタルデトックスをしてね。」"] },
-        "カサネ・イズミ：論理と不確定要素": { "quote": "「あなたのデータは極めて特異だ。思考を最適化しろ。」", "actions": ["「デスクの上を片付けろ。視覚的なノイズを排除しろ。」"] }
-    }
-
-    # MBTI DB (中略...基本構造は維持) 
-    # ※ detail['messages'] に "女王セレスティア" のセリフを追加したものと想定
+    # --- 2. 全16タイプ・完全データベース ---
     mbti_db = {
-        "INFJ": {
-            "name": "提唱者", "animal": "フクロウ", "catchphrase": "「夜の静寂の中で、未来の光を見通す賢者」",
-            "strengths": "洞察力、深い共感、理想主義。", "weaknesses": "完璧主義、燃え尽きやすい。",
-            "details": {"work": "本質を見抜くリーダー", "love": "精神的な深い繋がりを重視", "stress": "感覚過敏になり引きこもる", "best_match": "ENFJ（ライオン）"},
-            "messages": {
-                "女王セレスティア": "フクロウ、あなたのその深い洞察力...私の側近にふさわしいわ。光栄に思いなさい。",
-                "ギャル先生": "フクロウちゃん、世界観エグい！その感性マジで尊いよ！🌈"
-            }
-        },
-        # (他の15タイプも同様に拡張可能)
+        "INTJ": {"name": "建築家", "animal": "トラ", "catchphrase": "孤高の戦略家", "traits": "論理的で疑い深く、独自の戦略で目標を達成します。", "work": "戦略立案、システム設計、研究職。", "love_basic": "知的な刺激を求め、信頼を段階的に築きます。", "best_match": "ENTP（キツネ）"},
+        "INTP": {"name": "論理学者", "animal": "チンパンジー", "catchphrase": "知的好奇心の探求者", "traits": "客観的な分析を好み、常に新しいアイデアを模索します。", "work": "プログラマー、数学者、哲学者。", "love_basic": "依存を嫌い、知的な対話を何より重視します。", "best_match": "ENTJ（ワシ）"},
+        "ENTJ": {"name": "指揮官", "animal": "ワシ", "catchphrase": "不屈のリーダー", "traits": "強い意志と決断力で、周囲を目標へ導きます。", "work": "経営者、プロジェクトマネージャー、弁護士。", "love_basic": "切磋琢磨し合える、対等で強いパートナーを好みます。", "best_match": "INTP（チンパンジー）"},
+        "ENTP": {"name": "討論者", "animal": "キツネ", "catchphrase": "変幻自在のアイデアマン", "traits": "常識を疑い、議論を通じて本質を見極める知性派です。", "work": "起業家、コンサルタント、広告プランナー。", "love_basic": "退屈を嫌い、常に新鮮な驚きを共有できる相手を求めます。", "best_match": "INTJ（トラ）"},
+        "INFJ": {"name": "提唱者", "animal": "フクロウ", "catchphrase": "静かな洞察者", "traits": "深い共感力と強い信念を持ち、理想を追求します。", "work": "カウンセラー、作家、教育者。", "love_basic": "精神的な一体感を求め、一度心を許すと一生尽くします。", "best_match": "ENFJ（ライオン）"},
+        "INFP": {"name": "仲介者", "animal": "ウサギ", "catchphrase": "優しき夢想家", "traits": "独自の価値観を持ち、感受性が豊かで利他的な性格です。", "work": "芸術家、心理士、NGO職員。", "love_basic": "ロマンチックで純粋な愛を信じ、理想の王子・王女を待ちます。", "best_match": "ENFP（カワウソ）"},
+        "ENFJ": {"name": "主人公", "animal": "ライオン", "catchphrase": "カリスマ的導き手", "traits": "他者の可能性を信じ、情熱的に周囲をサポートします。", "work": "コーチ、広報、非営利団体代表。", "love_basic": "尽くすことに喜びを感じ、調和のとれた関係を築きます。", "best_match": "INFJ（フクロウ）"},
+        "ENFP": {"name": "広報運動家", "animal": "カワウソ", "catchphrase": "自由奔放な冒険家", "traits": "社交的で楽観的、新しい可能性を見つける天才です。", "work": "マーケター、イベント企画、ジャーナリスト。", "love_basic": "運命的な出会いを信じ、熱く情熱的に愛を伝えます。", "best_match": "INFP（ウサギ）"},
+        "ISTJ": {"name": "管理者", "animal": "ビーバー", "catchphrase": "信頼の守護者", "traits": "実用的で事実に基づき行動し、義務を忠実に果たします。", "work": "公務員、会計士、エンジニア。", "love_basic": "安定感抜群。誠実で、長く続く家庭的な愛を育みます。", "best_match": "ESFJ（ゾウ）"},
+        "ISFJ": {"name": "擁護者", "animal": "シカ", "catchphrase": "献身的なサポーター", "traits": "周囲を温かく見守り、細やかな配慮で和を保ちます。", "work": "看護師、事務職、司書。", "love_basic": "相手のニーズを察するのが得意。一途で家庭的な愛を捧げます。", "best_match": "ESTJ（番犬）"},
+        "ESTJ": {"name": "幹部", "animal": "番犬", "catchphrase": "秩序の司令塔", "traits": "現実的で組織をまとめる力が強く、公正さを重んじます。", "work": "警察官、財務担当、管理職。", "love_basic": "ルールと義務を大切にし、堅実な未来を共に歩む関係を好みます。", "best_match": "ISFJ（シカ）"},
+        "ESFJ": {"name": "領事", "animal": "ゾウ", "catchphrase": "心優しき世話役", "traits": "社交的で協調性が高く、他者のために積極的に行動します。", "work": "接客業、福祉、小学校教師。", "love_basic": "周囲からも祝福されるような、正統派で安定した愛を求めます。", "best_match": "ISTJ（ビーバー）"},
+        "ISTP": {"name": "巨匠", "animal": "サメ", "catchphrase": "冷静な実務家", "traits": "手先の器用さや技術を好み、危機に際しても冷静です。", "work": "整備士、パイロット、アスリート。", "love_basic": "自由を好み、束縛を嫌います。行動で愛情を示すタイプです。", "best_match": "ESTP（チーター）"},
+        "ISFP": {"name": "冒険家", "animal": "ネコ", "catchphrase": "感性の芸術家", "traits": "美的センスに優れ、今この瞬間を自由に生きることを好みます。", "work": "デザイナー、職人、音楽家。", "love_basic": "言葉より感性。お互いの自由を尊重し合える関係が理想です。", "best_match": "ESFP（レッサーパンダ）"},
+        "ESTP": {"name": "起業家", "animal": "チーター", "catchphrase": "スリルを愛する行動派", "traits": "エネルギッシュで、目の前の問題に即座に対応します。", "work": "起業家、営業職、消防士。", "love_basic": "刺激と楽しさが最優先。飽きさせないダイナミックな関係を好みます。", "best_match": "ISTP（サメ）"},
+        "ESFP": {"name": "エンターテイナー", "animal": "レッサーパンダ", "catchphrase": "人生を楽しむ達人", "traits": "社交的で人を喜ばせるのが大好き。常に周囲に活力を与えます。", "work": "俳優、添乗員、営業スタッフ。", "love_basic": "今を楽しもう！サプライズやイベントを好む情熱的なタイプです。", "best_match": "ISFP（ネコ）"},
     }
 
-    # --- 4. セッション管理 ---
+    # --- 3. メイン処理・UI ---
     if "show_result" not in st.session_state: st.session_state["show_result"] = False
-    if "run_count" not in st.session_state: st.session_state["run_count"] = 0
 
-    # --- 5. 画面表示 ---
     if not st.session_state["show_result"]:
-        st.title("帝国性格診断クエスト 🏰")
-        answered_count = sum(1 for i in range(len(questions)) if st.session_state.get(f"q_{i}_{st.session_state['run_count']}") is not None)
-        
-        with st.sidebar:
-            st.header("📊 帝国の検問進捗")
-            st.progress(answered_count / len(questions))
-            st.write(f"**{answered_count} / {len(questions)} 問** 通過")
-            st.divider()
-            if answered_count == len(questions): st.success("「完璧！あんたマジ最高！💖」（ギャル先生）")
-
-        for i, (q_text, axis, weight) in enumerate(questions):
+        st.title("性格・動物・恋愛 統合診断アプリ")
+        st.write("全16タイプから、あなたの本質を精密に分析します。")
+        for i, (q_text, axis, _) in enumerate(questions):
             st.markdown(f"**Q{i+1}. {q_text}**")
-            st.radio(f"radio_{i}", options=[1, 2, 3, 4, 5],
-                    format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x],
-                    key=f"q_{i}_{st.session_state['run_count']}", label_visibility="collapsed", horizontal=True, index=None)
-            st.write("---")
-
-        if st.button("審判を仰ぐ（診断結果を見る） ✨", use_container_width=True):
-            if answered_count < len(questions):
-                st.error(f"まだ回答が足りないわよ！（残り {len(questions) - answered_count} 問）")
-            else:
-                st.session_state["show_result"] = True
-                st.rerun()
-
+            st.radio(f"radio_{i}", options=[1, 2, 3, 4, 5], format_func=lambda x: {1: "全く違う", 2: "違う", 3: "中立", 4: "そう思う", 5: "強くそう思う"}[x], key=f"q_{i}", label_visibility="collapsed", horizontal=True, index=None)
+        if st.button("診断結果を見る"):
+            st.session_state["show_result"] = True
+            st.rerun()
     else:
-        # --- 結果計算 ---
-        if "final_detail" not in st.session_state:
-            st.balloons()
-            scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0, "A-T": 0, "L": 0}
-            for i, (_, axis, _) in enumerate(questions):
-                val = st.session_state.get(f"q_{i}_{st.session_state['run_count']}", 3)
-                scores[axis] += (val - 3) 
+        # スコア集計
+        scores = {"E-I": 0, "S-N": 0, "T-F": 0, "J-P": 0, "A-T": 0, "Love": 0}
+        for i, (_, axis, _) in enumerate(questions):
+            val = st.session_state.get(f"q_{i}", 3)
+            scores[axis] += (val - 3)
 
-            m_core = ("E" if scores["E-I"] >= 0 else "I") + ("S" if scores["S-N"] >= 0 else "N") + \
-                     ("T" if scores["T-F"] >= 0 else "F") + ("J" if scores["J-P"] >= 0 else "P")
-            
-            # ラブタイプ判定（女王セレスティアの3モード）
-            l_score = scores["L"]
-            if l_score >= 6: 
-                l_mode, l_name = "真", "【慈愛の女神】思いやりと愛で包み込む人格者"
-            elif l_score <= -2: 
-                l_mode, l_name = "表", "【高貴な君主】プライドが高く理想を求める"
-            else: 
-                l_mode, l_name = "裏", "【情熱の支配者】鞭を振るい罵声を浴びせる"
+        m_type = ("E" if scores["E-I"] >= 0 else "I") + ("S" if scores["S-N"] >= 0 else "N") + \
+                 ("T" if scores["T-F"] >= 0 else "F") + ("J" if scores["J-P"] >= 0 else "P")
+        
+        # 恋愛タイプ判定
+        l_score = scores["Love"]
+        if l_score >= 5: l_mode, l_name = "「真」の愛", "慈愛と包容力の人格者タイプ"
+        elif l_score <= -1: l_mode, l_name = "「表」の愛", "気品と自律の高貴タイプ"
+        else: l_mode, l_name = "「裏」の愛", "情熱と支配の情熱タイプ"
 
-            st.session_state["final_full_res"] = m_core + ("-A" if scores["A-T"] >= 0 else "-T")
-            st.session_state["final_detail"] = mbti_db.get(m_core, mbti_db.get("INFJ")) # Default to INFJ for safety
-            st.session_state["final_scores"] = scores
-            st.session_state["love_mode"] = (l_mode, l_name)
-
-        detail = st.session_state["final_detail"]
-        l_mode, l_name = st.session_state["love_mode"]
-
-        st.markdown(f"## 判定結果：{st.session_state['final_full_res']}")
-        st.markdown(f"### 動物タイプ：『 {detail['animal']} 』")
+        detail = mbti_db.get(m_type)
+        
+        st.header(f"判定結果：{m_type} ({detail['name']})")
+        st.subheader(f"動物タイプ：{detail['animal']}")
         st.info(f"**{detail['catchphrase']}**")
 
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 特性分析", "💖 ラブタイプ", "🤝 メンター", "💰 帝国の慈愛"])
-
+        tab1, tab2 = st.tabs(["基本性格分析", "恋愛深層診断"])
         with tab1:
-            st.markdown(f"✅ **強み**: {detail['strengths']}")
-            st.markdown(f"⚠️ **弱み**: {detail['weaknesses']}")
-            # レーダーチャート表示 (省略せず実装を推奨)
-
+            st.write(f"**特徴:** {detail['traits']}")
+            st.write(f"**適職:** {detail['work']}")
         with tab2:
-            st.subheader(f"👑 セレスティア・モード：{l_mode}")
-            st.markdown(f"**称号：{l_name}**")
-            st.write(detail['details']['love'])
-            st.caption("※このラブタイプは、あなたの心の深層にある『女王の二面性』を示しています。")
+            st.write(f"**あなたの恋愛スタイル:** {l_mode}")
+            st.markdown(f"**傾向:** {l_name}")
+            st.write(f"**{detail['animal']}型の傾向:** {detail['love_basic']}")
+            st.success(f"📌 **最高の相性:** {detail['best_match']}")
 
-        with tab3:
-            selected_mentor = st.selectbox("メンターを指名", options=list(mentor_data.keys()))
-            msg = detail["messages"].get(selected_mentor, mentor_data[selected_mentor]["quote"])
-            st.chat_message("assistant").write(f"**{selected_mentor}**：「{msg}」")
-            st.success(f"🎁 **アクション**：{random.choice(mentor_data[selected_mentor]['actions'])}")
-
-        with tab4:
-            st.write("### 🌍 帝国の社会貢献")
-            st.write("このブログ「帝国」では、収益の一部を基金や育英会に寄付しています。")
-            st.markdown("> **現在の野望：収益化を達成し、累計寄付額の証拠をアップすること。**")
-            st.write("あなたの診断結果が、いつか誰かの未来に繋がるかもしれません。")
-
-        if st.button("🔄 帝国の門を再び叩く", use_container_width=True):
+        if st.button("もう一度診断する"):
             st.session_state.clear()
             st.rerun()
 
 if __name__ == "__main__":
-    run_mbti_diagnostic()
+    run_integrated_diagnostic()
